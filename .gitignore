@@ -1,0 +1,16 @@
+# Python
+venv/
+*.pyc
+__pycache__/
+db.sqlite3
+.env
+
+# Node
+client/node_modules/
+client/.next/
+client/out/
+client/.env.local
+
+# Media/OS
+media/
+.DS_Store

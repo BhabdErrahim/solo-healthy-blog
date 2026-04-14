@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-muted: #6793AC;
+  --color-brand-deep: #114AB1;
+  --color-brand-orange: #E4580B;
+}
+
+/* Base body style */
+body {
+  background-color: white;
+  color: #111827;
+}
+
+/* Custom Floating Animations */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes float-fast {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px) translateX(5px); }
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 4s ease-in-out infinite;
+}
+/* Custom Quill Styling */
+.ql-container.ql-snow {
+  border: none !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  padding: 1rem !important;
+}
+
+.ql-editor {
+  padding: 2rem !important;
+  min-height: 500px;
+}
+
+.ql-editor h1, .ql-editor h2 {
+  color: #114AB1;
+  font-weight: 900;
+}
+
+.ql-editor p {
+  color: #374151;
+  line-height: 1.8;
+}
+
+/* Custom Scrollbar for the Spiderweb panel */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+}
