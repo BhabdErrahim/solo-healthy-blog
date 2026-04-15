@@ -7,13 +7,19 @@ import { ChevronRight, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default async function Home() {
-  const allArticles = await getArticles() || [];
-  if (allArticles.length === 0) {
+  const allArticles = await getArticles();
+  
+  // If there's an error or no data, show a welcoming "Empty" state
+  if (!allArticles || allArticles.length === 0) {
     return (
-      <main className="bg-white min-h-screen pt-40 text-center">
+      <main className="bg-white min-h-screen">
         <HomeHero />
-        <h2 className="text-2xl font-bold text-gray-400">Initializing Content Pillars...</h2>
-        <p className="text-gray-400">Visit the admin panel to deploy your first cornerstone.</p>
+        <div className="py-20 text-center">
+          <h2 className="text-2xl font-bold text-brand-deep opacity-30 uppercase tracking-widest">
+            Initializing Platform Data...
+          </h2>
+          <p className="text-brand-muted mt-2">Log in to /admin to deploy your first cornerstone.</p>
+        </div>
       </main>
     );
   }
