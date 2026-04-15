@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:8000/api';
+const isProd = process.env.NODE_ENV === 'production';
+const API_URL = isProd ? '/api' : 'http://127.0.0.1:8000/api';
+
+
 
 // Create an axios instance for Admin tasks (it will auto-attach the token)
 const adminApi = axios.create({

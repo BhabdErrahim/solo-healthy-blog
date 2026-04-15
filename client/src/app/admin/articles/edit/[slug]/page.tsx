@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getCategories, getAdminArticleBySlug, updateArticle } from '@/lib/api';
 import { Save, Zap, ArrowLeft, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -8,30 +8,50 @@ import matter from 'gray-matter';
 import { marked } from 'marked';
 import MarkdownInput, { normalizeImageTags } from '@/components/MarkdownInput';
 
-// 1. STABLE RENDERER (Same as New Page)
-const markedOptions: any = {
-  breaks: true,
-  gfm: true,
-  renderer: {
-    space() { return ''; },
-    heading({ text, depth }: { text: string; depth: number }) {
-      const size = depth === 1 ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl';
-      const color = depth === 1 ? 'text-[#114AB1]' : 'text-[#E4580B]';
-      return `<h${depth} class="${size} font-black ${color} mt-12 mb-6 leading-tight">${text}</h${depth}>`;
-    },
-    paragraph({ text }: { text: string }) {
-      if (text.includes('<div class="my-12') || text.includes('<img')) return text;
-      return `<p class="text-gray-600 text-lg leading-relaxed mb-6">${text}</p>`;
-    },
-    image({ href, text }: { href: string; text: string }) {
-      const cleanHref = (href || '').replace(/\s+/g, '');
-      return `<div class="my-12 w-full">
-        <img src="${cleanHref}" alt="${text || ''}" class="w-full h-auto rounded-[2.5rem] shadow-2xl border-[10px] border-white block bg-gray-100" loading="lazy" />
-        ${text ? `<p class="text-center text-sm text-[#6793AC] mt-6 italic font-bold tracking-wide">${text}</p>` : ''}
-      </div>`;
-    },
-  },
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. INDESTRUCTIBLE RENDERER
+// We instantiate a real Renderer so that missing functions like 'hr' 
+// are provided by default, preventing the "renderer.hr is not a function" crash.
+// ─────────────────────────────────────────────────────────────────────────────
+const renderer = new marked.Renderer();
+
+renderer.heading = ({ text, depth }) => {
+  const size = depth === 1 ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl';
+  const color = depth === 1 ? 'text-[#114AB1]' : 'text-[#E4580B]';
+  return `<h${depth} class="${size} font-black ${color} mt-12 mb-6 leading-tight">${text}</h${depth}>`;
 };
+
+renderer.paragraph = ({ text }) => {
+  if (text.includes('<div class="my-12') || text.includes('<img')) return text;
+  return `<p class="text-gray-600 text-lg leading-relaxed mb-6">${text}</p>`;
+};
+
+renderer.image = ({ href, text }) => {
+  const cleanHref = (href || '')
+    .replace(/\n/g, '')
+    .replace(/\r/g, '')
+    .trim();
+
+  return `
+    <div class="my-12 w-full">
+      <img
+        src="${cleanHref}"
+        alt="${text || ''}"
+        class="w-full h-auto rounded-[2.5rem] shadow-2xl border-[10px] border-white block bg-gray-100"
+        loading="lazy"
+      />
+      ${
+        text
+          ? `<p class="text-center text-sm text-[#6793AC] mt-6 italic font-bold tracking-wide">${text}</p>`
+          : ''
+      }
+    </div>
+  `;
+};
+// Ensure horizontal rules (---) don't crash the app
+renderer.hr = () => `<hr class="my-12 border-t-2 border-gray-100" />`;
+
+const markedOptions = { renderer, gfm: true, breaks: true };
 
 export default function EditArticle() {
   const router = useRouter();
@@ -47,7 +67,6 @@ export default function EditArticle() {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [existingThumbnail, setExistingThumbnail] = useState<string | null>(null);
 
-  // Load Categories and Article Data
   useEffect(() => {
     const loadData = async () => {
       const cats = await getCategories();
@@ -56,17 +75,17 @@ export default function EditArticle() {
       try {
         const article = await getAdminArticleBySlug(urlSlugParam as string);
         
-        // Reconstruct Markdown string with Frontmatter
+        // RECONSTRUCT Markdown for editing
         const reconstructedMd = `---
-title: "${article.title}"
+title: "${article.title.replace(/"/g, '\\"')}"
 slug: "${article.slug}"
-excerpt: "${article.excerpt}"
+excerpt: "${article.excerpt.replace(/"/g, '\\"')}"
 category: "${article.category.name}"
 featured: ${article.featured}
 status: "${article.status}"
 ---
 
-${article.content}`; // Note: Ideally your DB stores raw MD, but we can parse HTML back or store MD in a separate field later.
+${article.content}`;
 
         setRawMarkdown(reconstructedMd);
         setExistingThumbnail(article.thumbnail);
@@ -90,18 +109,26 @@ ${article.content}`; // Note: Ideally your DB stores raw MD, but we can parse HT
 
   const processMarkdown = (val: string) => {
     try {
-      const sanitized = val.replace(/\r/g, '');
+      // 1. SANITIZE: Remove carriage returns and handle YAML quirks
+      const sanitized = val.replace(/\r/g, '').trim();
+      
+      // 2. NORMALIZE IMAGES
       const fixed = normalizeImageTags(sanitized);
+
+      // 3. PARSE YAML
       const { data, content } = matter(fixed);
+
+      // 4. PARSE MD TO HTML
       const htmlContent = marked.parse(content, markedOptions) as string;
 
+      // 5. CATEGORY MATCHING
       const rawCatName = String(data.category || '').toLowerCase().trim();
       const matchedCategory = categories.find((c: any) => 
         c.name.toLowerCase().includes(rawCatName) || c.slug.toLowerCase().includes(rawCatName)
       );
 
       if (matchedCategory) setCatMatchStatus('found');
-      else setCatMatchStatus('error');
+      else if (rawCatName !== '') setCatMatchStatus('error');
 
       setFormData({
         title: data.title || '',
@@ -113,7 +140,7 @@ ${article.content}`; // Note: Ideally your DB stores raw MD, but we can parse HT
         content: htmlContent,
       });
     } catch (err) {
-      console.error('Markdown parse error:', err);
+      console.warn('Parser is waiting for valid Frontmatter structure...');
     }
   };
 
@@ -131,11 +158,11 @@ ${article.content}`; // Note: Ideally your DB stores raw MD, but we can parse HT
       await updateArticle(urlSlugParam as string, finalData);
       router.push('/admin/articles');
     } catch {
-      alert('Update failed. Check your data.');
+      alert('Update failed. Ensure all required fields are detected from the markdown.');
     }
   };
 
-  if (isLoading) return <div className="p-20 text-center font-black text-brand-deep animate-pulse">Loading Pillar Data...</div>;
+  if (isLoading) return <div className="p-20 text-center font-black text-[#114AB1] animate-pulse uppercase tracking-widest">Accessing Solo-Pillar Data...</div>;
 
   return (
     <div className="max-w-[1600px] mx-auto p-4 lg:p-10">
@@ -146,11 +173,11 @@ ${article.content}`; // Note: Ideally your DB stores raw MD, but we can parse HT
           </Link>
           <div>
             <h1 className="text-3xl font-black text-[#114AB1]">Edit Cornerstone</h1>
-            <p className="text-[#6793AC] text-sm font-bold uppercase tracking-widest">Update existing strategy</p>
+            <p className="text-[#6793AC] text-sm font-bold uppercase tracking-widest">Live Platform Update</p>
           </div>
         </div>
         <button onClick={handleSave} className="w-full md:w-auto bg-[#114AB1] text-white px-12 py-5 rounded-[1.5rem] font-black text-lg hover:bg-[#E4580B] transition-all shadow-xl flex items-center justify-center gap-2">
-          <Save size={22} /> Update Platform
+          <Save size={22} /> Push Changes
         </button>
       </header>
 
@@ -170,8 +197,8 @@ ${article.content}`; // Note: Ideally your DB stores raw MD, but we can parse HT
                 {catMatchStatus === 'found' ? <CheckCircle2 className="text-emerald-500" /> : <AlertCircle className="text-gray-300" />}
               </div>
               <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100">
-                <p className="text-[10px] font-black text-[#6793AC] uppercase">Slug</p>
-                <p className="font-bold text-xs text-[#114AB1] truncate">{formData.slug}</p>
+                <p className="text-[10px] font-black text-[#6793AC] uppercase">Status</p>
+                <p className="font-black text-lg text-[#114AB1] capitalize">{formData.status}</p>
               </div>
             </div>
 
@@ -180,12 +207,12 @@ ${article.content}`; // Note: Ideally your DB stores raw MD, but we can parse HT
             </div>
 
             <div className="space-y-4">
-              <p className="text-[10px] font-black text-[#6793AC] uppercase">Change Card Thumbnail (Optional)</p>
-              <div className="relative h-64 w-full bg-gray-50 rounded-[3rem] border-4 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden hover:border-[#E4580B] transition-all">
+              <p className="text-[10px] font-black text-[#6793AC] uppercase">Thumbnail Replacement</p>
+              <div className="relative h-64 w-full bg-gray-50 rounded-[3rem] border-4 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden hover:border-[#E4580B] transition-all group">
                 {thumbnail ? (
                   <img src={URL.createObjectURL(thumbnail)} className="w-full h-full object-cover" />
                 ) : existingThumbnail ? (
-                  <img src={existingThumbnail} className="w-full h-full object-cover opacity-60" />
+                  <img src={existingThumbnail} className="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all" />
                 ) : (
                   <ImageIcon className="text-gray-300" size={48} />
                 )}
@@ -194,10 +221,10 @@ ${article.content}`; // Note: Ideally your DB stores raw MD, but we can parse HT
             </div>
 
             <div className="pt-6 border-t border-gray-100 flex-grow">
-              <p className="text-[10px] font-black text-[#6793AC] uppercase mb-6 flex items-center gap-2">
-                <span className="w-2 h-2 bg-[#E4580B] rounded-full animate-pulse" /> Live Rendering
-              </p>
-              <div className="overflow-y-auto max-h-[500px] pr-4 custom-scrollbar" dangerouslySetInnerHTML={{ __html: formData.content }} />
+               <p className="text-[10px] font-black text-[#6793AC] uppercase mb-6 flex items-center gap-2">
+                 <span className="w-2 h-2 bg-[#E4580B] rounded-full animate-pulse" /> Live Rendering
+               </p>
+               <div className="overflow-y-auto max-h-[500px] pr-4 custom-scrollbar" dangerouslySetInnerHTML={{ __html: formData.content }} />
             </div>
           </div>
         </div>
