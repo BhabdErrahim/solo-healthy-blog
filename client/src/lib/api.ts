@@ -2,17 +2,21 @@ import axios from 'axios';
 
 const isServer = typeof window === 'undefined';
 
-// 1. Build the Base URL
-// During build/server-side, we MUST have the full domain.
-// In the browser, we can use relative paths or the full domain.
 const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-  if (!isServer) return ''; // Fallback for browser relative paths
-  return 'http://127.0.0.1:8000'; // Local development fallback
+  // If we have the env var, use it (ensure it has https://)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    return url.startsWith('http') ? url : `https://${url}`;
+  }
+  // Browser fallback for Vercel (relative to root)
+  if (!isServer) return ''; 
+  // Local development
+  return 'http://127.0.0.1:8000';
 };
 
 const API_BASE = getBaseUrl();
-const API_URL = `${API_BASE}/api`;
+// Ensure there is exactly one slash between base and api
+const API_URL = API_BASE.endsWith('/') ? `${API_BASE}api` : `${API_BASE}/api`;
 
 // Create an axios instance for Admin tasks
 const adminApi = axios.create({
