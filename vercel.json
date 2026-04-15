@@ -12,19 +12,36 @@
   ],
   "routes": [
     {
+      "src": "/api/token",
+      "dest": "core/wsgi.py"
+    },
+    {
+      "src": "/api/token/",
+      "dest": "core/wsgi.py"
+    },
+    {
+      "src": "/api/token/refresh",
+      "dest": "core/wsgi.py"
+    },
+    {
+      "src": "/api/token/refresh/",
+      "dest": "core/wsgi.py"
+    },
+    {
       "src": "/api/(.*)",
-      "dest": "core/wsgi.py",
-      "continue": false
+      "dest": "core/wsgi.py"
     },
     {
       "src": "/sys-admin/(.*)",
-      "dest": "core/wsgi.py",
-      "continue": false
+      "dest": "core/wsgi.py"
+    },
+    {
+      "src": "/sitemap.xml",
+      "dest": "core/wsgi.py"
     },
     {
       "src": "/static/admin/(.*)",
-      "dest": "core/wsgi.py",
-      "continue": false
+      "dest": "core/wsgi.py"
     },
     {
       "src": "/(.*)",
