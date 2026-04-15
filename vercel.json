@@ -16,11 +16,11 @@
       "dest": "core/wsgi.py"
     },
     {
-      "src": "/media/(.*)",
+      "src": "/sys-admin/(.*)",
       "dest": "core/wsgi.py"
     },
     {
-      "src": "/static/(.*)",
+      "src": "/static/admin/(.*)",
       "dest": "core/wsgi.py"
     },
     {

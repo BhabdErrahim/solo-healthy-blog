@@ -31,7 +31,7 @@ sitemaps = {
 }
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('sys-admin/', admin.site.urls),
     path('api/', include('blog.urls')),
     
     # NEW: Auth endpoints for your React Dashboard
