@@ -7,7 +7,16 @@ import { ChevronRight, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default async function Home() {
-  const allArticles = await getArticles();
+  const allArticles = await getArticles() || [];
+  if (allArticles.length === 0) {
+    return (
+      <main className="bg-white min-h-screen pt-40 text-center">
+        <HomeHero />
+        <h2 className="text-2xl font-bold text-gray-400">Initializing Content Pillars...</h2>
+        <p className="text-gray-400">Visit the admin panel to deploy your first cornerstone.</p>
+      </main>
+    );
+  }
   
   // High-End Logic: Ensuring we don't show the same article twice
   const recent = allArticles.slice(0, 3);

@@ -1,9 +1,18 @@
 import axios from 'axios';
 
-const isProd = process.env.NODE_ENV === 'production';
-const API_URL = isProd ? '/api' : 'http://127.0.0.1:8000/api';
+const isServer = typeof window === 'undefined';
 
+// 2. Build the Base URL
+// In Vercel production, we need the full URL for server-side fetching
+// In local dev, we use localhost:8000
+const getBaseUrl = () => {
+  if (!isServer) return ''; // Browser can use relative paths
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  return 'http://127.0.0.1:8000'; // Fallback for local build
+};
 
+const API_BASE = getBaseUrl();
+const API_URL = `${API_BASE}/api`;
 
 // Create an axios instance for Admin tasks (it will auto-attach the token)
 const adminApi = axios.create({
@@ -65,12 +74,15 @@ export const login = async (credentials: any) => {
 
 // 2. Public APIs
 export const getArticles = async () => {
-  const response = await axios.get(`${API_URL}/articles/`);
+  // Use absolute URL if on server, relative if on client
+  const url = isServer ? `${API_URL}/articles/` : `/api/articles/`;
+  const response = await axios.get(url);
   return response.data;
 };
 
 export const getArticleBySlug = async (slug: string) => {
-  const response = await axios.get(`${API_URL}/articles/${slug}/`);
+  const url = isServer ? `${API_URL}/articles/${slug}/` : `/api/articles/${slug}/`;
+  const response = await axios.get(url);
   return response.data;
 };
 
