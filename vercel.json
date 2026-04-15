@@ -13,15 +13,18 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "core/wsgi.py"
+      "dest": "core/wsgi.py",
+      "continue": false
     },
     {
       "src": "/sys-admin/(.*)",
-      "dest": "core/wsgi.py"
+      "dest": "core/wsgi.py",
+      "continue": false
     },
     {
       "src": "/static/admin/(.*)",
-      "dest": "core/wsgi.py"
+      "dest": "core/wsgi.py",
+      "continue": false
     },
     {
       "src": "/(.*)",

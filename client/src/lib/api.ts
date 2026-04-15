@@ -58,27 +58,26 @@ adminApi.interceptors.response.use(
   }
 );
 
-// 1. Auth API
+// Inside api.ts
+
 export const login = async (credentials: any) => {
-  const response = await axios.post(`${API_URL}/token/`, credentials);
-  if (response.data.access && !isServer) {
+  // REMOVE the trailing slash from 'token'
+  // Change from `${API_URL}/token/` to `${API_URL}/token`
+  const response = await axios.post(`${API_URL}/token`, credentials); 
+  
+  if (response.data.access && typeof window !== 'undefined') {
     localStorage.setItem('access_token', response.data.access);
     localStorage.setItem('refresh_token', response.data.refresh);
   }
   return response.data;
 };
 
-// 2. Public APIs (Added Error Handling to prevent build crashes)
-export const getArticles = async () => {
-  try {
-    // Force absolute URL for server-side fetching
-    const fetchUrl = isServer ? `${API_URL}/articles/` : `${API_URL}/articles/`;
-    const response = await axios.get(fetchUrl);
+// Do the same for other POST/PATCH methods
+export const createArticle = async (formData: FormData) => {
+    const response = await adminApi.post('/articles', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
-  } catch (err) {
-    console.error("Build-time fetch failed (getArticles). Returning empty list.");
-    return [];
-  }
 };
 
 export const getArticleBySlug = async (slug: string) => {
