@@ -3,11 +3,25 @@ import axios from 'axios';
 const isServer = typeof window === 'undefined';
 
 const getBaseUrl = () => {
+  // Explicit env var always wins (works for both local and production)
   if (process.env.NEXT_PUBLIC_API_URL) {
     const url = process.env.NEXT_PUBLIC_API_URL;
     return url.endsWith('/') ? url.slice(0, -1) : url;
   }
-  return isServer ? 'http://127.0.0.1:8000' : '';
+
+  // Server-side (Next.js SSR/SSG): call Django directly
+  if (isServer) return 'http://127.0.0.1:8000';
+
+  // Browser-side fallback:
+  // - On Vercel both apps share the same origin, so '' works fine there.
+  // - Locally Next.js is on :3000 and Django is on :8000, so we must be explicit.
+  //   We detect local dev by checking the hostname.
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://127.0.0.1:8000';
+  }
+
+  // Production browser (same-origin Vercel deployment)
+  return '';
 };
 
 const API_BASE = getBaseUrl();
@@ -36,7 +50,6 @@ adminApi.interceptors.response.use(
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
         try {
-          // No trailing slash — matches Django URL + vercel.json route
           const response = await axios.post(`${API_BASE}/api/token/refresh`, {
             refresh: refreshToken,
           });
@@ -57,7 +70,6 @@ adminApi.interceptors.response.use(
 // Auth
 // ─────────────────────────────────────────────────────────────────────────────
 export const login = async (credentials: { username: string; password: string }) => {
-  // No trailing slash — matches /api/token in vercel.json and urls.py
   const response = await axios.post(`${API_BASE}/api/token`, credentials);
   if (response.data.access && !isServer) {
     localStorage.setItem('access_token', response.data.access);

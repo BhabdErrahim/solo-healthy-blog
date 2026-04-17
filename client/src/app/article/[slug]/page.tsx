@@ -3,6 +3,14 @@ import ArticleCard from "@/components/ArticleCard";
 import { Clock, User, Calendar, Share2, Bookmark } from "lucide-react";
 import Link from "next/link";
 
+// Helper function to handle local vs production image URLs
+const getFullImageUrl = (url: string) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  // Point to your local Django server when the path is relative
+  return `http://127.0.0.1:8000${url}`;
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. DYNAMIC METADATA
 // ─────────────────────────────────────────────────────────────────────────────
@@ -22,7 +30,8 @@ export async function generateMetadata({
     openGraph: {
       title: article.title,
       description: article.excerpt,
-      images: [{ url: article.thumbnail, width: 1200, height: 630, alt: article.title }],
+      // FIX: Use full image URL for metadata
+      images: [{ url: getFullImageUrl(article.thumbnail), width: 1200, height: 630, alt: article.title }],
       type: "article",
       publishedTime: article.created_at,
       authors: [article.author.username],
@@ -31,7 +40,8 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: article.title,
       description: article.excerpt,
-      images: [article.thumbnail],
+      // FIX: Use full image URL for twitter
+      images: [getFullImageUrl(article.thumbnail)],
     },
     alternates: {
       canonical: `https://sololife.com/article/${slug}`,
@@ -63,7 +73,8 @@ export default async function ArticleDetail({
     },
     headline: article.title,
     description: article.excerpt,
-    image: article.thumbnail,
+    // FIX: Use full image URL for JSON-LD
+    image: getFullImageUrl(article.thumbnail),
     author: { "@type": "Person", name: article.author.username },
     publisher: {
       "@type": "Organization",
@@ -123,7 +134,8 @@ export default async function ArticleDetail({
         {/* ── Featured Image ── */}
         <div className="max-w-6xl mx-auto px-6 mb-16">
           <img
-            src={article.thumbnail}
+            // FIX: Applied helper here
+            src={getFullImageUrl(article.thumbnail)}
             alt={article.title}
             className="w-full h-[500px] object-cover rounded-[3rem] shadow-2xl"
           />
@@ -131,16 +143,11 @@ export default async function ArticleDetail({
 
         {/* ── Main Content + Sidebar ── */}
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16">
-          {/* FIX: suppressHydrationWarning on the article container handles internal mismatches */}
           <article className="lg:col-span-8" suppressHydrationWarning>
             <div
               className="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-6"
               dangerouslySetInnerHTML={{ __html: safeHtml }}
-            />{/* 
-              CRITICAL FIX: 
-              The closing brace of the content div and the opening tag of the 
-              share bar MUST have NO space/newline between them in the JSX.
-            */}<div className="mt-12 pt-8 border-t border-gray-100 flex items-center gap-4">
+            /><div className="mt-12 pt-8 border-t border-gray-100 flex items-center gap-4">
               <span className="font-bold text-brand-deep">Share this insight:</span>
               <button className="p-3 bg-gray-50 rounded-full hover:bg-brand-orange hover:text-white transition" aria-label="Share">
                 <Share2 size={20} />
@@ -166,7 +173,12 @@ export default async function ArticleDetail({
                       href={`/article/${rel.slug}`}
                       className="flex items-center gap-4 p-3 rounded-2xl bg-white/10 hover:bg-white/20 transition border border-white/5"
                     >
-                      <img src={rel.thumbnail} className="w-16 h-16 rounded-xl object-cover" alt="" />
+                      <img 
+                        // FIX: Applied helper here for sidebar thumbnails
+                        src={getFullImageUrl(rel.thumbnail)} 
+                        className="w-16 h-16 rounded-xl object-cover" 
+                        alt="" 
+                      />
                       <div>
                         <h4 className="text-sm font-bold leading-tight">{rel.title}</h4>
                         <span className="text-[10px] text-brand-orange uppercase font-bold">{rel.category.name}</span>
