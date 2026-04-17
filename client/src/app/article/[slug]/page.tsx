@@ -2,14 +2,7 @@ import { getArticleBySlug } from "@/lib/api";
 import ArticleCard from "@/components/ArticleCard";
 import { Clock, User, Calendar, Share2, Bookmark } from "lucide-react";
 import Link from "next/link";
-
-// Helper function to handle local vs production image URLs
-const getFullImageUrl = (url: string) => {
-  if (!url) return "";
-  if (url.startsWith("http")) return url;
-  // Point to your local Django server when the path is relative
-  return `http://127.0.0.1:8000${url}`;
-};
+import { getFullImageUrl } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. DYNAMIC METADATA
@@ -30,8 +23,15 @@ export async function generateMetadata({
     openGraph: {
       title: article.title,
       description: article.excerpt,
-      // FIX: Use full image URL for metadata
-      images: [{ url: getFullImageUrl(article.thumbnail), width: 1200, height: 630, alt: article.title }],
+      // Metadata FIX: Use utility for social sharing images
+      images: [
+        { 
+          url: getFullImageUrl(article.thumbnail), 
+          width: 1200, 
+          height: 630, 
+          alt: article.title 
+        }
+      ],
       type: "article",
       publishedTime: article.created_at,
       authors: [article.author.username],
@@ -40,11 +40,10 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: article.title,
       description: article.excerpt,
-      // FIX: Use full image URL for twitter
       images: [getFullImageUrl(article.thumbnail)],
     },
     alternates: {
-      canonical: `https://sololife.com/article/${slug}`,
+      canonical: `https://sololife-six.vercel.app/article/${slug}`,
     },
   };
 }
@@ -67,25 +66,24 @@ export default async function ArticleDetail({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    mainEntityOfPage: {
+    "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": `https://sololife.com/article/${article.slug}`,
+      "@id": `https://sololife-six.vercel.app/article/${article.slug}`,
     },
-    headline: article.title,
-    description: article.excerpt,
-    // FIX: Use full image URL for JSON-LD
-    image: getFullImageUrl(article.thumbnail),
-    author: { "@type": "Person", name: article.author.username },
-    publisher: {
+    "headline": article.title,
+    "description": article.excerpt,
+    // JSON-LD FIX: Ensure search engines see the full image URL
+    "image": getFullImageUrl(article.thumbnail),
+    "author": { "@type": "Person", "name": article.author.username },
+    "publisher": {
       "@type": "Organization",
-      name: "SoloLife",
-      logo: { "@type": "ImageObject", url: "https://sololife.com/logo.png" },
+      "name": "SoloLife",
+      "logo": { "@type": "ImageObject", "url": "https://sololife-six.vercel.app/logo.png" },
     },
-    datePublished: article.created_at,
-    dateModified: article.updated_at || article.created_at,
+    "datePublished": article.created_at,
+    "dateModified": article.updated_at || article.created_at,
   };
 
-  // Pre-process HTML to ensure consistency
   const safeHtml = article.content.trim().replace(/\n{3,}/g, "\n\n");
 
   return (
@@ -96,7 +94,6 @@ export default async function ArticleDetail({
       />
 
       <main className="min-h-screen bg-white pb-20">
-        {/* ── Hero Header ── */}
         <header className="pt-16 pb-8 px-6 max-w-4xl mx-auto text-center">
           <Link
             href={`/category/${article.category.slug}`}
@@ -131,17 +128,15 @@ export default async function ArticleDetail({
           </div>
         </header>
 
-        {/* ── Featured Image ── */}
+        {/* FEATURED IMAGE FIX: Use the utility helper */}
         <div className="max-w-6xl mx-auto px-6 mb-16">
           <img
-            // FIX: Applied helper here
             src={getFullImageUrl(article.thumbnail)}
             alt={article.title}
             className="w-full h-[500px] object-cover rounded-[3rem] shadow-2xl"
           />
         </div>
 
-        {/* ── Main Content + Sidebar ── */}
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16">
           <article className="lg:col-span-8" suppressHydrationWarning>
             <div
@@ -158,10 +153,9 @@ export default async function ArticleDetail({
             </div>
           </article>
 
-          {/* ── Sidebar ── */}
           <aside className="lg:col-span-4 space-y-10">
             <div className="sticky top-28">
-              <div className="bg-brand-deep rounded-[2.5rem] p-8 text-white mb-8">
+              <div className="bg-brand-deep rounded-[2.5rem] p-8 text-white mb-8 shadow-xl">
                 <h3 className="text-2xl font-bold mb-4">The Solo Journey Map</h3>
                 <p className="text-blue-100 text-sm mb-6">
                   Explore connections between <strong>{article.category.name}</strong> and your lifestyle.
@@ -174,14 +168,14 @@ export default async function ArticleDetail({
                       className="flex items-center gap-4 p-3 rounded-2xl bg-white/10 hover:bg-white/20 transition border border-white/5"
                     >
                       <img 
-                        // FIX: Applied helper here for sidebar thumbnails
+                        // SIDEBAR THUMBNAIL FIX: Use the utility helper
                         src={getFullImageUrl(rel.thumbnail)} 
                         className="w-16 h-16 rounded-xl object-cover" 
-                        alt="" 
+                        alt={rel.title} 
                       />
                       <div>
-                        <h4 className="text-sm font-bold leading-tight">{rel.title}</h4>
-                        <span className="text-[10px] text-brand-orange uppercase font-bold">{rel.category.name}</span>
+                        <h4 className="text-sm font-bold leading-tight line-clamp-2">{rel.title}</h4>
+                        <span className="text-[10px] text-brand-orange uppercase font-bold tracking-widest">{rel.category.name}</span>
                       </div>
                     </Link>
                   ))}
@@ -190,8 +184,8 @@ export default async function ArticleDetail({
 
               <div className="bg-orange-50 p-8 rounded-[2.5rem] border border-orange-100 text-center">
                 <h4 className="text-xl font-bold text-brand-deep mb-2">Weekly Solo-Tips</h4>
-                <input type="email" placeholder="Email address" className="w-full p-4 rounded-2xl mb-4 border border-orange-200" />
-                <button className="w-full bg-brand-orange text-white py-4 rounded-2xl font-bold shadow-lg">Subscribe</button>
+                <input type="email" placeholder="Email address" className="w-full p-4 rounded-2xl mb-4 border border-orange-200 outline-none focus:ring-2 focus:ring-brand-orange" />
+                <button className="w-full bg-brand-orange text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-brand-deep transition-colors">Subscribe</button>
               </div>
             </div>
           </aside>
