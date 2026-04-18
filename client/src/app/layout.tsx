@@ -1,27 +1,30 @@
-"use client"; // Add this if not present to use usePathname
-import { usePathname } from "next/navigation";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+// ✅ FIX: Root layout must be a Server Component (no "use client").
+// "use client" here causes Next.js App Router to lose proper Server Component
+// rendering for child pages, breaking async data fetching in dynamic routes.
+// The pathname-based conditional is moved to <LayoutWrapper> (a Client Component).
+
+import type { Metadata } from "next";
+import LayoutWrapper from "@/components/LayoutWrapper";
 import "./globals.css";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  
-  // Check if the current path starts with /admin
-  const isAdminPage = pathname?.startsWith('/admin');
+export const metadata: Metadata = {
+  title: {
+    default: "SoloLife OS | The Modern Solo-Living Platform",
+    template: "%s | SoloLife",
+  },
+  description:
+    "Master the art of solo living through healthy habits, mindful travel, and curated recipes for one.",
+};
 
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body className="flex flex-col min-h-screen">
-        {/* Only show Navbar if NOT an admin page */}
-        {!isAdminPage && <Navbar />}
-        
-        <main className="flex-grow">
-          {children}
-        </main>
-        
-        {/* Only show Footer if NOT an admin page */}
-        {!isAdminPage && <Footer />}
+        <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
   );
