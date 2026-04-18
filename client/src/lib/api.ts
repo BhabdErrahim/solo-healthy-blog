@@ -2,23 +2,24 @@ import axios from 'axios';
 
 const isServer = typeof window === 'undefined';
 
-// 1. Export API_BASE so components can use it to fix Image URLs
+// 1. Define the Base URL strictly
 export const API_BASE = (() => {
+  // Production (Vercel)
   if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, ''); // Remove trailing slash if exists
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
   }
-  // Default for local development
-  return isServer ? 'http://127.0.0.1:8000' : 'http://localhost:8000';
+  // Local Development
+  return 'http://127.0.0.1:8000'; 
 })();
 
 const API_URL = `${API_BASE}/api`;
 
-// Create an axios instance for Admin tasks
+// Create an axios instance
 const adminApi = axios.create({
   baseURL: API_URL,
 });
 
-// Request Interceptor
+// Interceptor to add token (Client Only)
 adminApi.interceptors.request.use((config) => {
   if (!isServer) {
     const token = localStorage.getItem('access_token');
@@ -29,47 +30,8 @@ adminApi.interceptors.request.use((config) => {
   return config;
 });
 
-// Response Interceptor for Token Refreshing
-adminApi.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry && !isServer) {
-      originalRequest._retry = true;
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (refreshToken) {
-        try {
-          const response = await axios.post(`${API_URL}/token/refresh/`, {
-            refresh: refreshToken,
-          });
-          localStorage.setItem('access_token', response.data.access);
-          originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
-          return adminApi(originalRequest);
-        } catch {
-          localStorage.clear();
-          window.location.href = '/admin/login';
-        }
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. Auth API
-// ─────────────────────────────────────────────────────────────────────────────
-export const login = async (credentials: any) => {
-  // Django requires the trailing slash /
-  const response = await axios.post(`${API_URL}/token/`, credentials);
-  if (response.data.access && !isServer) {
-    localStorage.setItem('access_token', response.data.access);
-    localStorage.setItem('refresh_token', response.data.refresh);
-  }
-  return response.data;
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 2. Public APIs
+// Public APIs - Using FULL URLS at all times
 // ─────────────────────────────────────────────────────────────────────────────
 export const getArticles = async () => {
   try {
@@ -83,6 +45,7 @@ export const getArticles = async () => {
 
 export const getArticleBySlug = async (slug: string) => {
   try {
+    // FIX: Always use the absolute API_URL here
     const response = await axios.get(`${API_URL}/articles/${slug}/`);
     return response.data;
   } catch (err) {
@@ -96,38 +59,46 @@ export const getCategories = async () => {
     const response = await axios.get(`${API_URL}/categories/`);
     return response.data;
   } catch (err) {
-    console.error('API Error (getCategories):', err);
     return [];
   }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. Admin APIs (CRUD)
+// Admin APIs
 // ─────────────────────────────────────────────────────────────────────────────
-export const getAdminArticles = async () => {
-  const response = await adminApi.get('/articles/');
+export const login = async (credentials: any) => {
+  const response = await axios.post(`${API_URL}/token/`, credentials);
+  if (response.data.access && !isServer) {
+    localStorage.setItem('access_token', response.data.access);
+    localStorage.setItem('refresh_token', response.data.refresh);
+  }
   return response.data;
+};
+
+export const getAdminArticles = async () => {
+    const response = await adminApi.get('/articles/');
+    return response.data;
 };
 
 export const getAdminArticleBySlug = async (slug: string) => {
-  const response = await adminApi.get(`/articles/${slug}/`);
-  return response.data;
-};
-
-export const deleteArticle = async (slug: string) => {
-  return await adminApi.delete(`/articles/${slug}/`);
+    const response = await adminApi.get(`/articles/${slug}/`);
+    return response.data;
 };
 
 export const createArticle = async (formData: FormData) => {
-  const response = await adminApi.post('/articles/', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return response.data;
+    const response = await adminApi.post('/articles/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
 };
 
 export const updateArticle = async (slug: string, formData: FormData) => {
-  const response = await adminApi.patch(`/articles/${slug}/`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return response.data;
+    const response = await adminApi.patch(`/articles/${slug}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+};
+
+export const deleteArticle = async (slug: string) => {
+    return await adminApi.delete(`/articles/${slug}/`);
 };

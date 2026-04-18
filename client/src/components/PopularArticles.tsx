@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { TrendingUp } from "lucide-react";
+import { getFullImageUrl } from "@/lib/utils";
 
 export default function PopularArticles({ articles }: { articles: any[] }) {
   const featured = articles[0];
@@ -16,7 +17,11 @@ export default function PopularArticles({ articles }: { articles: any[] }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Big Featured Card */}
           <Link href={`/article/${featured?.slug}`} className="group relative h-[500px] rounded-[3rem] overflow-hidden block">
-            <img src={featured?.thumbnail} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+            <img
+              src={getFullImageUrl(featured?.thumbnail)}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              alt=""
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-brand-deep via-transparent to-transparent opacity-90"></div>
             <div className="absolute bottom-10 left-10 right-10">
               <span className="bg-brand-orange text-white px-4 py-1 rounded-full text-xs font-bold uppercase mb-4 inline-block">

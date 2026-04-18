@@ -1,7 +1,8 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
-import { BookOpen, Clock, ArrowRight } from 'lucide-react';
+import { BookOpen, ArrowRight } from 'lucide-react';
+import { getFullImageUrl } from '@/lib/utils';
 
 interface ArticleCardProps {
   article: {
@@ -27,9 +28,9 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
           </span>
         </div>
         
-        {/* Main Image */}
+        {/* Main Image — use getFullImageUrl to resolve relative paths */}
         <img 
-          src={article.thumbnail} 
+          src={getFullImageUrl(article.thumbnail)} 
           alt={article.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
@@ -43,7 +44,6 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
               {article.title}
             </h3>
           </Link>
-          {/* Read Time Pill (In place of the "Price" tag in your reference) */}
           <div className="bg-brand-muted/10 text-brand-muted px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ml-2">
             5 MIN READ
           </div>
@@ -53,13 +53,11 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
           {article.excerpt}
         </p>
 
-        {/* 3. Tags / Metadata Section */}
         <div className="flex flex-wrap gap-2 mb-8">
           <span className="bg-orange-50 text-brand-orange px-3 py-1 rounded-full text-[10px] font-bold uppercase">#Healthy</span>
           <span className="bg-blue-50 text-brand-deep px-3 py-1 rounded-full text-[10px] font-bold uppercase">#SoloLife</span>
         </div>
 
-        {/* 4. Action Button (The "Add to Cart" equivalent) */}
         <Link 
           href={`/article/${article.slug}`}
           className="mt-auto w-full bg-brand-orange text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-brand-deep transition-all duration-300 shadow-lg shadow-orange-200 group-hover:shadow-blue-200"
