@@ -17,14 +17,23 @@ export default function NewCategory() {
     setSlug(val.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''));
   };
 
-  const handleSave = async () => {
-    try {
-      await createCategory({ name, slug, description: desc });
-      router.push('/admin/categories');
-    } catch {
-      alert("Error: Check if the slug is already taken.");
+  // Inside handleSave in your categories/new/page.tsx
+const handleSave = async () => {
+  try {
+    await createCategory({ name, slug, description: desc });
+    router.push('/admin/categories');
+  } catch (err: any) {
+    // This will now show "405 Method Not Allowed" or the real error
+    const status = err.response?.status;
+    const message = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+    
+    if (status === 405) {
+        alert("Server Error 405: The backend is not allowing 'POST' requests. Check blog/views.py.");
+    } else {
+        alert(`Error: ${message}`);
     }
-  };
+  }
+};
 
   return (
     <div className="max-w-2xl mx-auto">

@@ -12,7 +12,7 @@ import { marked } from 'marked';
 import MarkdownInput, { normalizeImageTags } from '@/components/MarkdownInput';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Configure marked once globally (guard against HMR double-registration)
+// Configure marked once globally
 // ─────────────────────────────────────────────────────────────────────────────
 const g = globalThis as any;
 if (!g.__markedConfigured) {
@@ -26,11 +26,37 @@ if (!g.__markedConfigured) {
         return '';
       },
 
+      // ─────────────────────────────────────────────────────────────────────────────
+      // UPDATED LINK RENDERER: Fixed for Marked v12+ token structure
+      // ─────────────────────────────────────────────────────────────────────────────
+      link(token: any) {
+        const { href, title, text } = token;
+        
+        // Logic to detect if link is internal or external
+        const isInternal = 
+          href.startsWith('/') || 
+          href.startsWith('#') || 
+          href.includes('sololife-six.vercel.app') || 
+          href.includes('localhost');
+
+        // We use standard Tailwind classes. 
+        // IMPORTANT: Ensure these colors are defined in your tailwind.config.ts
+        const baseClass = "font-extrabold transition-all duration-200 underline decoration-2 underline-offset-4";
+        
+        if (isInternal) {
+          // Internal: Deep Blue (#114AB1)
+          return `<a href="${href}" title="${title || ''}" class="${baseClass} text-brand-deep hover:text-brand-orange">${text}</a>`;
+        } else {
+          // External: Vibrant Orange (#E4580B)
+          return `<a href="${href}" title="${title || ''}" target="_blank" rel="noopener noreferrer" class="${baseClass} text-brand-orange hover:text-brand-deep">${text}<span class="text-[10px] ml-1 opacity-80">↗</span></a>`;
+        }
+      },
+
       heading(token: any) {
         const text = marked.parseInline(token.text || '') as string;
         const depth = token.depth;
         const size = depth === 1 ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl';
-        const color = depth === 1 ? 'text-[#114AB1]' : 'text-[#E4580B]';
+        const color = depth === 1 ? 'text-brand-deep' : 'text-brand-orange';
         return `<h${depth} class="${size} font-black ${color} mt-12 mb-6 leading-tight">${text}</h${depth}>`;
       },
 
@@ -54,7 +80,7 @@ if (!g.__markedConfigured) {
               style="display:block;width:100%;height:auto;"
               loading="lazy"
             />
-            ${text ? `<p class="text-center text-sm text-[#6793AC] mt-6 italic font-bold tracking-wide">${text}</p>` : ''}
+            ${text ? `<p class="text-center text-sm text-brand-muted mt-6 italic font-bold tracking-wide">${text}</p>` : ''}
           </div>`;
       },
 
@@ -74,7 +100,7 @@ if (!g.__markedConfigured) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Post-processor safety net for any images missed by the renderer
+// Post-processor safety net
 // ─────────────────────────────────────────────────────────────────────────────
 function postProcessImages(html: string): string {
   return html.replace(
@@ -83,55 +109,25 @@ function postProcessImages(html: string): string {
       const cleanUrl = url.trim().replace(/\s+/g, '');
       return `
         <div class="my-12 w-full">
-          <img
-            src="${cleanUrl}"
-            alt="${alt || 'Article Image'}"
-            class="w-full h-auto rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl border-[10px] border-white block bg-gray-100"
-            style="display:block;width:100%;height:auto;"
-            loading="lazy"
-          />
-          ${alt ? `<p class="text-center text-sm text-[#6793AC] mt-6 italic font-bold tracking-wide">${alt}</p>` : ''}
+          <img src="${cleanUrl}" alt="${alt || 'Article Image'}" class="w-full h-auto rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl border-[10px] border-white block bg-gray-100" loading="lazy" />
+          ${alt ? `<p class="text-center text-sm text-brand-muted mt-6 italic font-bold tracking-wide">${alt}</p>` : ''}
         </div>`;
     }
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Safely resolve marked output — handles both sync string and async Promise
-// ─────────────────────────────────────────────────────────────────────────────
 async function safeMarkedParse(src: string): Promise<string> {
   const result = marked.parse(src);
-  // marked v18 can return Promise<string> when async hooks are present
-  if (result instanceof Promise) {
-    return await result;
-  }
+  if (result instanceof Promise) return await result;
   return result as string;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Format Django API validation errors into a readable string
-// ─────────────────────────────────────────────────────────────────────────────
 function formatApiError(err: any): string {
   const data = err?.response?.data;
-  if (!data) {
-    return err?.message || 'Network error — check your connection.';
-  }
+  if (!data) return err?.message || 'Network error.';
   if (typeof data === 'string') return data;
-  if (typeof data === 'object') {
-    return Object.entries(data)
-      .map(([field, msgs]) => {
-        const message = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
-        return `• ${field}: ${message}`;
-      })
-      .join('\n');
-  }
-  return String(data);
+  return Object.entries(data).map(([f, m]) => `• ${f}: ${m}`).join('\n');
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Component
-// ─────────────────────────────────────────────────────────────────────────────
-type InputTab = 'paste' | 'upload';
 
 export default function NewArticleMarkdown() {
   const router = useRouter();
@@ -140,73 +136,45 @@ export default function NewArticleMarkdown() {
   const [catMatchStatus, setCatMatchStatus] = useState<'none' | 'found' | 'error'>('none');
   const [activeTab, setActiveTab] = useState<InputTab>('paste');
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
-    title: '',
-    slug: '',
-    excerpt: '',
-    category: '',
-    status: 'draft',
-    featured: false,
-    content: '',
+    title: '', slug: '', excerpt: '', category: '', status: 'draft', featured: false, content: '',
   });
   const [thumbnail, setThumbnail] = useState<File | null>(null);
 
-  useEffect(() => {
-    getCategories().then(setCategories);
-  }, []);
+  useEffect(() => { getCategories().then(setCategories); }, []);
 
-  // ── Parse pipeline (now async to safely await marked.parse) ───────────────
   const processMarkdown = async (val: string) => {
     try {
-      // Strip carriage returns so **bold** tokens match correctly
       const sanitizedInput = val.replace(/\r/g, '');
       const fixed = normalizeImageTags(sanitizedInput);
       const { data, content } = matter(fixed);
 
-      // FIX: await the result so we never store a Promise in state
       const rawHtml = await safeMarkedParse(content);
       const htmlContent = postProcessImages(rawHtml);
 
       const rawCatName = String(data.category || '').toLowerCase().trim();
       const matchedCategory = categories.find((c: any) => {
-        const dbName = c.name.toLowerCase();
-        const dbSlug = c.slug.toLowerCase();
-        return (
-          dbName.includes(rawCatName) ||
-          dbSlug.includes(rawCatName) ||
-          rawCatName.includes(dbSlug)
-        );
+        return c.name.toLowerCase().includes(rawCatName) || c.slug.toLowerCase().includes(rawCatName);
       });
 
-      if (matchedCategory) setCatMatchStatus('found');
-      else if (rawCatName !== '') setCatMatchStatus('error');
-      else setCatMatchStatus('none');
-
-      // FIX: Truncate excerpt client-side to match the model's max_length=500
-      const rawExcerpt = String(data.excerpt || '');
-      const excerpt = rawExcerpt.length > 490
-        ? rawExcerpt.slice(0, 490) + '…'
-        : rawExcerpt;
+      setCatMatchStatus(matchedCategory ? 'found' : (rawCatName ? 'error' : 'none'));
 
       setFormData({
         title: data.title || '',
         slug: data.slug || '',
-        excerpt,
+        excerpt: String(data.excerpt || '').slice(0, 490),
         category: matchedCategory ? matchedCategory.id : '',
         status: data.status || 'draft',
         featured: Boolean(data.featured),
         content: htmlContent,
       });
-
       setValidationError(null);
     } catch (err) {
-      console.error('Markdown parse error:', err);
-      setValidationError('Could not parse Markdown. Check your YAML frontmatter syntax.');
+      setValidationError('Markdown parsing error.');
     }
   };
 
@@ -216,69 +184,32 @@ export default function NewArticleMarkdown() {
   };
 
   const handleMarkdownFile = (file: File) => {
-    if (!file.name.match(/\.(md|markdown|txt)$/i)) {
-      alert('Please upload a .md or .markdown file.');
-      return;
-    }
+    if (!file.name.match(/\.(md|markdown|txt)$/i)) return;
     setUploadedFileName(file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
-      const content = e.target?.result as string;
-      const normalized = normalizeImageTags(content);
-      setRawMarkdown(normalized);
-      processMarkdown(normalized);
+      const content = normalizeImageTags(e.target?.result as string);
+      setRawMarkdown(content);
+      processMarkdown(content);
     };
     reader.readAsText(file);
   };
 
-  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleMarkdownFile(file);
-  };
-
-  // ── Save handler with full error visibility ────────────────────────────────
   const handleSave = async () => {
-    // Client-side pre-flight checks
-    if (!formData.title || !formData.slug) {
-      alert('Verification Failed: Title and Slug are required in your YAML frontmatter.');
+    if (!formData.category || !thumbnail) {
+      alert('Verification Failed: Missing category or thumbnail.');
       return;
     }
-    if (!formData.category) {
-      alert('Verification Failed: Category could not be matched. Check that the category name exists in your database.');
-      return;
-    }
-    if (!formData.content) {
-      alert('Verification Failed: Article content is empty. Make sure there is Markdown content below the frontmatter block.');
-      return;
-    }
-    if (!thumbnail) {
-      alert('Verification Failed: A Card Thumbnail image is required.');
-      return;
-    }
-
     setIsSaving(true);
-
     const finalData = new FormData();
-    finalData.append('title', formData.title);
-    finalData.append('slug', formData.slug);
-    finalData.append('excerpt', formData.excerpt);
-    finalData.append('category', String(formData.category));
-    finalData.append('status', formData.status);
-    // FIX: send boolean as "true"/"false" string that DRF accepts reliably
-    finalData.append('featured', formData.featured ? 'true' : 'false');
-    finalData.append('content', formData.content);
+    Object.entries(formData).forEach(([k, v]) => finalData.append(k, String(v)));
     finalData.append('thumbnail', thumbnail);
 
     try {
       await createArticle(finalData);
       router.push('/admin/articles');
-    } catch (err: any) {
-      // FIX: surface the actual Django error instead of hiding it
-      const message = formatApiError(err);
-      alert(`Deployment failed:\n\n${message}`);
-      console.error('createArticle error:', err?.response?.data || err);
+    } catch (err) {
+      alert(`Deployment failed: ${formatApiError(err)}`);
     } finally {
       setIsSaving(false);
     }
@@ -286,173 +217,71 @@ export default function NewArticleMarkdown() {
 
   return (
     <div className="max-w-[1600px] mx-auto p-4 lg:p-10">
-
-      {/* HEADER */}
       <header className="flex flex-col md:flex-row justify-between items-center mb-10 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm gap-4">
         <div className="flex items-center gap-4">
-          <Link href="/admin/articles" className="p-3 bg-gray-50 hover:bg-[#114AB1] hover:text-white rounded-full transition-all">
+          <Link href="/admin/articles" className="p-3 bg-gray-50 hover:bg-brand-deep hover:text-white rounded-full transition-all">
             <ArrowLeft size={20} />
           </Link>
-          <div>
-            <h1 className="text-3xl font-black text-[#114AB1] flex items-center gap-2">
-              <Zap className="text-[#E4580B]" fill="currentColor" size={28} /> Deployment Engine
-            </h1>
-            <p className="text-[#6793AC] text-sm font-bold uppercase tracking-widest">
-              High Integrity Content Importer
-            </p>
-          </div>
+          <h1 className="text-3xl font-black text-brand-deep flex items-center gap-2">
+            <Zap className="text-brand-orange" fill="currentColor" size={28} /> Deployment
+          </h1>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full md:w-auto bg-[#114AB1] text-white px-12 py-5 rounded-[1.5rem] font-black text-lg hover:bg-[#E4580B] transition-all shadow-xl flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          <Save size={22} /> {isSaving ? 'Deploying…' : 'Deploy Cornerstone'}
+        <button onClick={handleSave} disabled={isSaving} className="bg-brand-deep text-white px-12 py-5 rounded-[1.5rem] font-black text-lg hover:bg-brand-orange transition-all shadow-xl disabled:opacity-60">
+          <Save size={22} /> {isSaving ? 'Deploying...' : 'Deploy Cornerstone'}
         </button>
       </header>
 
-      {/* Validation warning banner */}
-      {validationError && (
-        <div className="mb-6 px-6 py-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 font-bold text-sm flex items-center gap-3">
-          <AlertCircle size={18} className="shrink-0" />
-          {validationError}
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-
-        {/* ── Left: Input panel ── */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm w-fit">
-            <button
-              onClick={() => setActiveTab('paste')}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-black text-sm transition-all ${
-                activeTab === 'paste' ? 'bg-[#114AB1] text-white shadow-md' : 'text-[#6793AC] hover:text-[#114AB1]'
-              }`}
-            >
-              <ClipboardPaste size={16} /> Paste Markdown
+          <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 w-fit">
+            <button onClick={() => setActiveTab('paste')} className={`px-5 py-3 rounded-xl font-black text-sm transition-all ${activeTab === 'paste' ? 'bg-brand-deep text-white shadow-md' : 'text-brand-muted hover:text-brand-deep'}`}>
+              Paste
             </button>
-            <button
-              onClick={() => setActiveTab('upload')}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-black text-sm transition-all ${
-                activeTab === 'upload' ? 'bg-[#114AB1] text-white shadow-md' : 'text-[#6793AC] hover:text-[#114AB1]'
-              }`}
-            >
-              <Upload size={16} /> Upload File
+            <button onClick={() => setActiveTab('upload')} className={`px-5 py-3 rounded-xl font-black text-sm transition-all ${activeTab === 'upload' ? 'bg-brand-deep text-white shadow-md' : 'text-brand-muted hover:text-brand-deep'}`}>
+              Upload
             </button>
           </div>
-
-          {activeTab === 'paste' && (
-            <MarkdownInput
-              value={rawMarkdown}
-              onChange={handleMarkdownInputUpdate}
-            />
-          )}
-
-          {activeTab === 'upload' && (
-            <div className="space-y-4">
-              <div
-                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-                onDragLeave={() => setIsDragOver(false)}
-                onDrop={handleFileDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`relative h-52 w-full rounded-[2.5rem] border-4 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
-                  isDragOver ? 'border-[#E4580B] bg-orange-50' : uploadedFileName ? 'border-emerald-400 bg-emerald-50' : 'border-[#114AB1]/30 bg-[#114AB1]/5'
-                }`}
-              >
-                {uploadedFileName ? (
-                  <p className="font-black text-emerald-600">{uploadedFileName}</p>
-                ) : (
-                  <p className="font-black text-[#114AB1]">Drag & drop or click to browse</p>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".md,.markdown,.txt"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleMarkdownFile(f); }}
-                />
-              </div>
-              {rawMarkdown && (
-                <pre className="w-full h-[580px] p-8 bg-[#0f172a] text-emerald-400 font-mono text-xs rounded-[2.5rem] shadow-2xl overflow-auto whitespace-pre-wrap break-words">
-                  {rawMarkdown}
-                </pre>
-              )}
+          {activeTab === 'paste' ? (
+            <MarkdownInput value={rawMarkdown} onChange={handleMarkdownInputUpdate} />
+          ) : (
+            <div onClick={() => fileInputRef.current?.click()} className="h-[820px] rounded-[3rem] border-4 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-50">
+              <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => e.target.files && handleMarkdownFile(e.target.files[0])} />
+              <p className="font-bold text-gray-400">Click to upload .md file</p>
             </div>
           )}
         </div>
 
-        {/* ── Right: Preview panel ── */}
         <div className="lg:col-span-6 space-y-8">
           <div className="bg-white p-10 rounded-[4rem] border border-gray-100 shadow-sm space-y-8 min-h-[850px] flex flex-col">
-
-            {/* Status chips */}
             <div className="grid grid-cols-2 gap-4">
-              <div className={`p-6 rounded-3xl border flex items-center justify-between transition-all ${catMatchStatus === 'found' ? 'bg-emerald-50 border-emerald-100' : catMatchStatus === 'error' ? 'bg-red-50 border-red-100' : 'bg-gray-50'}`}>
+              <div className={`p-6 rounded-3xl border flex items-center justify-between transition-all ${catMatchStatus === 'found' ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50'}`}>
                 <div>
-                  <p className="text-[10px] font-black text-[#6793AC] uppercase">Category</p>
-                  <p className={`font-black text-lg ${catMatchStatus === 'found' ? 'text-emerald-600' : catMatchStatus === 'error' ? 'text-red-500' : 'text-[#114AB1]'}`}>
-                    {catMatchStatus === 'found' ? 'Verified' : catMatchStatus === 'error' ? 'Not Found' : 'Searching…'}
-                  </p>
+                  <p className="text-[10px] font-black text-brand-muted uppercase">Category</p>
+                  <p className="font-black text-lg text-brand-deep">{catMatchStatus === 'found' ? 'Verified' : 'Searching...'}</p>
                 </div>
-                {catMatchStatus === 'found'
-                  ? <CheckCircle2 className="text-emerald-500" />
-                  : <AlertCircle className={catMatchStatus === 'error' ? 'text-red-400' : 'text-gray-300'} />
-                }
+                {catMatchStatus === 'found' ? <CheckCircle2 className="text-emerald-500" /> : <AlertCircle className="text-gray-300" />}
               </div>
               <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100">
-                <p className="text-[10px] font-black text-[#6793AC] uppercase">Slug</p>
-                <p className="font-bold text-xs text-[#114AB1] truncate">{formData.slug || '…'}</p>
+                <p className="text-[10px] font-black text-brand-muted uppercase">Slug</p>
+                <p className="font-bold text-xs text-brand-deep truncate">{formData.slug || '...'}</p>
               </div>
             </div>
 
-            {/* Title preview */}
             <div className="border-b border-gray-100 pb-6">
-              <p className="text-[10px] font-black text-[#E4580B] uppercase mb-2">Current Title</p>
-              <h2 className="text-3xl font-black text-[#114AB1] leading-tight">
-                {formData.title || 'Waiting for valid input…'}
-              </h2>
+              <h2 className="text-3xl font-black text-brand-deep leading-tight">{formData.title || 'Input required...'}</h2>
             </div>
 
-            {/* Excerpt preview with length warning */}
-            {formData.excerpt && (
-              <div className="pb-2">
-                <p className="text-[10px] font-black text-[#6793AC] uppercase mb-1">
-                  Excerpt
-                  <span className={`ml-2 ${formData.excerpt.length > 490 ? 'text-amber-500' : 'text-emerald-500'}`}>
-                    ({formData.excerpt.length}/490 chars)
-                  </span>
-                </p>
-                <p className="text-sm text-gray-500 line-clamp-2">{formData.excerpt}</p>
-              </div>
-            )}
-
-            {/* Thumbnail upload */}
             <div className="space-y-4">
-              <p className="text-[10px] font-black text-[#6793AC] uppercase">Card Thumbnail (Required)</p>
-              <div className="relative h-64 w-full bg-gray-50 rounded-[3rem] border-4 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden hover:border-[#E4580B] transition-all">
-                {thumbnail
-                  ? <img src={URL.createObjectURL(thumbnail)} className="w-full h-full object-cover" alt="thumbnail preview" />
-                  : <ImageIcon className="text-gray-300" size={48} />
-                }
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                  onChange={(e) => e.target.files && setThumbnail(e.target.files[0])}
-                />
+              <p className="text-[10px] font-black text-brand-muted uppercase">Thumbnail (Required)</p>
+              <div className="relative h-64 w-full bg-gray-50 rounded-[3rem] border-4 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden hover:border-brand-orange transition-all">
+                {thumbnail ? <img src={URL.createObjectURL(thumbnail)} className="w-full h-full object-cover" /> : <ImageIcon className="text-gray-300" size={48} />}
+                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => e.target.files && setThumbnail(e.target.files[0])} />
               </div>
             </div>
 
-            {/* Live HTML render */}
             <div className="pt-6 border-t border-gray-100 flex-grow">
-              <p className="text-[10px] font-black text-[#6793AC] uppercase mb-6 flex items-center gap-2">
-                <span className="w-2 h-2 bg-[#E4580B] rounded-full animate-pulse" /> Display Render
-              </p>
-              <div
-                className="overflow-y-auto max-h-[500px] pr-4 custom-scrollbar"
-                dangerouslySetInnerHTML={{ __html: formData.content }}
-              />
+               <p className="text-[10px] font-black text-brand-muted uppercase mb-6">Visual Preview</p>
+               <div className="overflow-y-auto max-h-[500px] pr-4 custom-scrollbar" dangerouslySetInnerHTML={{ __html: formData.content }} />
             </div>
           </div>
         </div>
