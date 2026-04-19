@@ -1,37 +1,34 @@
-// ✅ FIX: Replaced axios with native fetch for all SERVER-SIDE data-fetching
-// functions. Next.js App Router extends fetch with built-in caching/deduplication.
-// axios bypasses that, making every request a cold hit.  When a dynamic route
-// (e.g. /article/[slug]) is rendered at REQUEST TIME, a cold axios call to an
-// unreachable API returns null → "Article not found".  fetch + revalidate lets
-// Next.js serve stale data while revalidating in the background.
-//
-// axios is intentionally KEPT for the admin write-operations (POST/PATCH/DELETE)
-// because those need auth headers and multipart support which adminApi already
-// handles perfectly.
-
 import axios from "axios";
 
 const isServer = typeof window === "undefined";
 
-// ✅ FIX: API_BASE construction.
-// NEXT_PUBLIC_ vars are inlined at build time AND available at runtime.
-// Priority: explicit env var → Vercel deployment URL → local dev fallback.
+// 1. DYNAMIC BASE URL CONSTRUCTION
+// This logic handles Localhost (Port 8000) and Vercel (Production URL)
 export const API_BASE = (() => {
+  // If we have an explicit environment variable (Set in Vercel or .env)
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
   }
-  // On Vercel, VERCEL_URL is the deployment URL (no protocol prefix).
-  // This is a server-only env var, available inside Next.js server code at runtime.
+  
+  // If on Vercel but variable is missing (fallback)
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
+
+  // Local Development: MUST point to Django port 8000
   return "http://127.0.0.1:8000";
 })();
 
+// We force the use of the absolute URL even in the browser to avoid 
+// conflicts with Next.js's own internal routing/middleware.
 const API_URL = `${API_BASE}/api`;
 
-// ─── Admin axios instance (auth + multipart) ─────────────────────────────────
-const adminApi = axios.create({ baseURL: API_URL });
+// ─── Admin axios instance ──────────────────────────────────────────────────
+const adminApi = axios.create({ 
+    baseURL: API_URL,
+    // Add timeout to prevent hanging requests
+    timeout: 15000 
+});
 
 adminApi.interceptors.request.use((config) => {
   if (!isServer) {
@@ -41,14 +38,11 @@ adminApi.interceptors.request.use((config) => {
   return config;
 });
 
-// ─── Public read APIs (use fetch so Next.js can cache + revalidate) ───────────
+// ─── Public read APIs (Fetch + ISR Caching) ────────────────────────────────
 
-/**
- * Returns all articles for public pages.
- * Revalidates every 60 s so the home page stays fresh without blocking requests.
- */
 export const getArticles = async () => {
   try {
+    // We use the absolute URL to ensure the build server and browser hit the same target
     const res = await fetch(`${API_URL}/articles/`, {
       next: { revalidate: 60 },
     });
@@ -60,24 +54,12 @@ export const getArticles = async () => {
   }
 };
 
-/**
- * ✅ FIX: was axios → now fetch.
- * Dynamic article pages (/article/[slug]) render at REQUEST TIME.
- * With axios a failed network call returns null immediately.
- * With fetch + revalidate: 60 Next.js returns cached HTML if the API is
- * momentarily unreachable, preventing the "Article not found" flash.
- */
 export const getArticleBySlug = async (slug: string) => {
   try {
     const res = await fetch(`${API_URL}/articles/${slug}/`, {
       next: { revalidate: 60 },
     });
-    if (!res.ok) {
-      console.error(
-        `API Error (getArticleBySlug): HTTP ${res.status} for slug "${slug}"`
-      );
-      return null;
-    }
+    if (!res.ok) return null;
     return await res.json();
   } catch (err) {
     console.error(`API Error (getArticleBySlug): ${slug}`, err);
@@ -97,12 +79,10 @@ export const getCategories = async () => {
   }
 };
 
-// ─── Admin write APIs (keep axios for auth + multipart) ───────────────────────
+// ─── Admin write APIs (Axios for Auth/Multipart) ───────────────────────────
 
-export const login = async (credentials: {
-  username: string;
-  password: string;
-}) => {
+export const login = async (credentials: { username: string; password: string }) => {
+  // Always use the absolute path for login to ensure the token comes from the right origin
   const response = await axios.post(`${API_URL}/token/`, credentials);
   if (response.data.access && !isServer) {
     localStorage.setItem("access_token", response.data.access);
