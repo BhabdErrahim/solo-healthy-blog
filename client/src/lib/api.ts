@@ -3,31 +3,27 @@ import axios from "axios";
 const isServer = typeof window === "undefined";
 
 // 1. DYNAMIC BASE URL CONSTRUCTION
-// This logic handles Localhost (Port 8000) and Vercel (Production URL)
 export const API_BASE = (() => {
-  // If we have an explicit environment variable (Set in Vercel or .env)
+  // If we have an explicit environment variable
   if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+    let url = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+    // Force HTTPS in production to prevent "http -> https" redirect loops
+    if (!isServer && window.location.protocol === 'https:' && url.startsWith('http:')) {
+        url = url.replace('http:', 'https:');
+    }
+    return url;
   }
   
-  // If on Vercel but variable is missing (fallback)
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  // Local Development: MUST point to Django port 8000
-  return "http://127.0.0.1:8000";
+  // Fallback for local development
+  return isServer ? "http://127.0.0.1:8000" : "http://localhost:8000";
 })();
 
-// We force the use of the absolute URL even in the browser to avoid 
-// conflicts with Next.js's own internal routing/middleware.
 const API_URL = `${API_BASE}/api`;
 
 // ─── Admin axios instance ──────────────────────────────────────────────────
 const adminApi = axios.create({ 
     baseURL: API_URL,
-    // Add timeout to prevent hanging requests
-    timeout: 15000 
+    timeout: 20000 
 });
 
 adminApi.interceptors.request.use((config) => {
@@ -42,7 +38,7 @@ adminApi.interceptors.request.use((config) => {
 
 export const getArticles = async () => {
   try {
-    // We use the absolute URL to ensure the build server and browser hit the same target
+    // Added trailing slash / and cache control
     const res = await fetch(`${API_URL}/articles/`, {
       next: { revalidate: 60 },
     });
@@ -79,10 +75,9 @@ export const getCategories = async () => {
   }
 };
 
-// ─── Admin write APIs (Axios for Auth/Multipart) ───────────────────────────
+// ─── Admin write APIs (Axios) ──────────────────────────────────────────────
 
 export const login = async (credentials: { username: string; password: string }) => {
-  // Always use the absolute path for login to ensure the token comes from the right origin
   const response = await axios.post(`${API_URL}/token/`, credentials);
   if (response.data.access && !isServer) {
     localStorage.setItem("access_token", response.data.access);
@@ -118,7 +113,6 @@ export const updateArticle = async (slug: string, formData: FormData) => {
 export const deleteArticle = async (slug: string) => {
   return await adminApi.delete(`/articles/${slug}/`);
 };
-// client/src/lib/api.ts
 
 export const createCategory = async (data: any) => {
     const response = await adminApi.post('/categories/', data);
