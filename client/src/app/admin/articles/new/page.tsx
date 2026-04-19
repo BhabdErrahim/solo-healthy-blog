@@ -4,12 +4,16 @@ import { useRouter } from 'next/navigation';
 import { getCategories, createArticle } from '@/lib/api';
 import {
   Save, Zap, ArrowLeft, Image as ImageIcon,
-  CheckCircle2, AlertCircle, Upload, ClipboardPaste
+  CheckCircle2, AlertCircle, Upload,
 } from 'lucide-react';
 import Link from 'next/link';
 import matter from 'gray-matter';
 import { marked } from 'marked';
 import MarkdownInput, { normalizeImageTags } from '@/components/MarkdownInput';
+
+// ─── Tab type ─────────────────────────────────────────────────────────────────
+
+type InputTab = 'paste' | 'upload';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Configure marked once globally
@@ -99,9 +103,8 @@ if (!g.__markedConfigured) {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Post-processor safety net
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Post-processor safety net ────────────────────────────────────────────────
+
 function postProcessImages(html: string): string {
   return html.replace(
     /!\[([^\]]*)\]\((https?[^)]+)\)/g,
@@ -128,6 +131,8 @@ function formatApiError(err: any): string {
   if (typeof data === 'string') return data;
   return Object.entries(data).map(([f, m]) => `• ${f}: ${m}`).join('\n');
 }
+
+// ─── Page component ───────────────────────────────────────────────────────────
 
 export default function NewArticleMarkdown() {
   const router = useRouter();
@@ -217,72 +222,184 @@ export default function NewArticleMarkdown() {
 
   return (
     <div className="max-w-[1600px] mx-auto p-4 lg:p-10">
+
+      {/* ── Header bar ─────────────────────────────────────────────────────── */}
       <header className="flex flex-col md:flex-row justify-between items-center mb-10 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm gap-4">
         <div className="flex items-center gap-4">
-          <Link href="/admin/articles" className="p-3 bg-gray-50 hover:bg-brand-deep hover:text-white rounded-full transition-all">
+          <Link
+            href="/admin/articles"
+            className="p-3 bg-gray-50 hover:bg-brand-deep hover:text-white rounded-full transition-all"
+          >
             <ArrowLeft size={20} />
           </Link>
           <h1 className="text-3xl font-black text-brand-deep flex items-center gap-2">
             <Zap className="text-brand-orange" fill="currentColor" size={28} /> Deployment
           </h1>
         </div>
-        <button onClick={handleSave} disabled={isSaving} className="bg-brand-deep text-white px-12 py-5 rounded-[1.5rem] font-black text-lg hover:bg-brand-orange transition-all shadow-xl disabled:opacity-60">
+
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="flex items-center gap-2 bg-brand-deep text-white px-12 py-5 rounded-[1.5rem] font-black text-lg hover:bg-brand-orange transition-all shadow-xl disabled:opacity-60"
+        >
           <Save size={22} /> {isSaving ? 'Deploying...' : 'Deploy Cornerstone'}
         </button>
       </header>
 
+      {/* ── Two-column grid ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+
+        {/* ── Left: editor ─────────────────────────────────────────────────── */}
         <div className="lg:col-span-6 space-y-4">
+
+          {/* Tab switcher */}
           <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 w-fit">
-            <button onClick={() => setActiveTab('paste')} className={`px-5 py-3 rounded-xl font-black text-sm transition-all ${activeTab === 'paste' ? 'bg-brand-deep text-white shadow-md' : 'text-brand-muted hover:text-brand-deep'}`}>
+            <button
+              onClick={() => setActiveTab('paste')}
+              className={`px-5 py-3 rounded-xl font-black text-sm transition-all ${
+                activeTab === 'paste'
+                  ? 'bg-brand-deep text-white shadow-md'
+                  : 'text-brand-muted hover:text-brand-deep'
+              }`}
+            >
               Paste
             </button>
-            <button onClick={() => setActiveTab('upload')} className={`px-5 py-3 rounded-xl font-black text-sm transition-all ${activeTab === 'upload' ? 'bg-brand-deep text-white shadow-md' : 'text-brand-muted hover:text-brand-deep'}`}>
+            <button
+              onClick={() => setActiveTab('upload')}
+              className={`px-5 py-3 rounded-xl font-black text-sm transition-all ${
+                activeTab === 'upload'
+                  ? 'bg-brand-deep text-white shadow-md'
+                  : 'text-brand-muted hover:text-brand-deep'
+              }`}
+            >
               Upload
             </button>
           </div>
+
+          {/* Editor or drop-zone */}
           {activeTab === 'paste' ? (
             <MarkdownInput value={rawMarkdown} onChange={handleMarkdownInputUpdate} />
           ) : (
-            <div onClick={() => fileInputRef.current?.click()} className="h-[820px] rounded-[3rem] border-4 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-50">
-              <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => e.target.files && handleMarkdownFile(e.target.files[0])} />
-              <p className="font-bold text-gray-400">Click to upload .md file</p>
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="h-[820px] rounded-[3rem] border-4 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors gap-4"
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".md,.markdown,.txt"
+                className="hidden"
+                onChange={(e) => e.target.files && handleMarkdownFile(e.target.files[0])}
+              />
+              <Upload size={40} className="text-gray-300" />
+              <div className="text-center">
+                <p className="font-bold text-gray-400">Click to upload .md file</p>
+                {uploadedFileName && (
+                  <p className="text-brand-orange font-bold text-sm mt-2">
+                    ✓ {uploadedFileName}
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>
 
+        {/* ── Right: preview & metadata ─────────────────────────────────────── */}
         <div className="lg:col-span-6 space-y-8">
           <div className="bg-white p-10 rounded-[4rem] border border-gray-100 shadow-sm space-y-8 min-h-[850px] flex flex-col">
+
+            {/* Status row */}
             <div className="grid grid-cols-2 gap-4">
-              <div className={`p-6 rounded-3xl border flex items-center justify-between transition-all ${catMatchStatus === 'found' ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50'}`}>
+              <div
+                className={`p-6 rounded-3xl border flex items-center justify-between transition-all ${
+                  catMatchStatus === 'found'
+                    ? 'bg-emerald-50 border-emerald-100'
+                    : catMatchStatus === 'error'
+                    ? 'bg-red-50 border-red-100'
+                    : 'bg-gray-50 border-gray-100'
+                }`}
+              >
                 <div>
                   <p className="text-[10px] font-black text-brand-muted uppercase">Category</p>
-                  <p className="font-black text-lg text-brand-deep">{catMatchStatus === 'found' ? 'Verified' : 'Searching...'}</p>
+                  <p className="font-black text-lg text-brand-deep">
+                    {catMatchStatus === 'found'
+                      ? 'Verified'
+                      : catMatchStatus === 'error'
+                      ? 'Not Found'
+                      : 'Searching...'}
+                  </p>
                 </div>
-                {catMatchStatus === 'found' ? <CheckCircle2 className="text-emerald-500" /> : <AlertCircle className="text-gray-300" />}
+                {catMatchStatus === 'found' ? (
+                  <CheckCircle2 className="text-emerald-500" />
+                ) : (
+                  <AlertCircle className={catMatchStatus === 'error' ? 'text-red-400' : 'text-gray-300'} />
+                )}
               </div>
+
               <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100">
                 <p className="text-[10px] font-black text-brand-muted uppercase">Slug</p>
-                <p className="font-bold text-xs text-brand-deep truncate">{formData.slug || '...'}</p>
+                <p className="font-bold text-xs text-brand-deep truncate">
+                  {formData.slug || '...'}
+                </p>
               </div>
             </div>
 
+            {/* Article title preview */}
             <div className="border-b border-gray-100 pb-6">
-              <h2 className="text-3xl font-black text-brand-deep leading-tight">{formData.title || 'Input required...'}</h2>
+              <h2 className="text-3xl font-black text-brand-deep leading-tight">
+                {formData.title || (
+                  <span className="text-gray-200">Input required...</span>
+                )}
+              </h2>
             </div>
 
+            {/* Thumbnail upload */}
             <div className="space-y-4">
-              <p className="text-[10px] font-black text-brand-muted uppercase">Thumbnail (Required)</p>
-              <div className="relative h-64 w-full bg-gray-50 rounded-[3rem] border-4 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden hover:border-brand-orange transition-all">
-                {thumbnail ? <img src={URL.createObjectURL(thumbnail)} className="w-full h-full object-cover" /> : <ImageIcon className="text-gray-300" size={48} />}
-                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => e.target.files && setThumbnail(e.target.files[0])} />
+              <p className="text-[10px] font-black text-brand-muted uppercase">
+                Thumbnail (Required)
+              </p>
+              <div className="relative h-64 w-full bg-gray-50 rounded-[3rem] border-4 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden hover:border-brand-orange transition-all group cursor-pointer">
+                {thumbnail ? (
+                  <img
+                    src={URL.createObjectURL(thumbnail)}
+                    className="w-full h-full object-cover"
+                    alt="Thumbnail preview"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-gray-300">
+                    <ImageIcon size={48} />
+                    <p className="text-sm font-bold group-hover:text-brand-orange transition-colors">
+                      Click to upload
+                    </p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={(e) => e.target.files && setThumbnail(e.target.files[0])}
+                />
               </div>
             </div>
 
+            {/* Live HTML preview */}
             <div className="pt-6 border-t border-gray-100 flex-grow">
-               <p className="text-[10px] font-black text-brand-muted uppercase mb-6">Visual Preview</p>
-               <div className="overflow-y-auto max-h-[500px] pr-4 custom-scrollbar" dangerouslySetInnerHTML={{ __html: formData.content }} />
+              <p className="text-[10px] font-black text-brand-muted uppercase mb-6 flex items-center gap-2">
+                <span className="w-2 h-2 bg-[#E4580B] rounded-full animate-pulse" />
+                Visual Preview
+              </p>
+              {formData.content ? (
+                <div
+                  className="overflow-y-auto max-h-[500px] pr-4 custom-scrollbar"
+                  dangerouslySetInnerHTML={{ __html: formData.content }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-32 text-gray-200 font-bold text-sm uppercase tracking-widest">
+                  Preview will appear here
+                </div>
+              )}
             </div>
+
           </div>
         </div>
       </div>
