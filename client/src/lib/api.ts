@@ -118,3 +118,23 @@ export const updateArticle = async (slug: string, formData: FormData) => {
 export const deleteArticle = async (slug: string) => {
   return await adminApi.delete(`/articles/${slug}/`);
 };
+// client/src/lib/api.ts
+
+export const createCategory = async (data: any) => {
+    const response = await adminApi.post('/categories/', data);
+    return response.data;
+};
+
+export const updateCategory = async (id: number, data: any) => {
+    const response = await adminApi.patch(`/categories/${id}/`, data);
+    return response.data;
+};
+
+export const deleteCategory = async (id: number) => {
+    return await adminApi.delete(`/categories/${id}/`);
+};
+
+export const getAdminCategoryById = async (id: string) => {
+    const response = await adminApi.get(`/categories/${id}/`);
+    return response.data;
+};
