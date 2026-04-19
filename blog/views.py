@@ -49,7 +49,19 @@ class ArticleDetailUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
             return Article.objects.all()
         return Article.objects.filter(status="published")
 
+# blog/views.py
 
+class CategoryListCreateView(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+class CategoryDetailUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAdminOrReadOnly]
+    lookup_field = 'id' # We use ID for internal admin editing
+    
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
