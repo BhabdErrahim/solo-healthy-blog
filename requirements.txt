@@ -11,3 +11,5 @@ django-cloudinary-storage
 whitenoise
 gunicorn
 python-frontmatter
+cloudinary
+django-cloudinary-storage
