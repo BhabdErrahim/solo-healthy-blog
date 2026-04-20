@@ -8,43 +8,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
 
-  // 1. AUTH PROTECTION: Redirect if no access token exists
   useEffect(() => {
     const token = localStorage.getItem('access_token');
-    if (!token && pathname !== '/admin/login') {
-      router.push('/admin/login');
+    // Flexible check for login path
+    const isLoginPage = pathname?.includes('/admin/login');
+    if (!token && !isLoginPage) {
+      router.push('/admin/login/');
     }
   }, [pathname, router]);
 
-  // 2. LOGOUT LOGIC: Clear tokens and state
   const handleLogout = () => {
-    // Clear all auth-related items from storage
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    
-    // Optional: Clear any other session data if you add it later
-    // localStorage.clear(); 
-
-    // Redirect to login page immediately
-    router.push('/admin/login');
+    router.push('/admin/login/');
   };
 
-  // Skip layout if on login page
-  if (pathname === '/admin/login') return <>{children}</>;
+  // FIX: Use .includes or check for both versions of the slash
+  if (pathname?.includes('/admin/login')) {
+    return <div className="min-h-screen bg-brand-deep">{children}</div>;
+  }
 
   const menu = [
-    { name: 'Overview', icon: <LayoutDashboard size={20} />, path: '/admin' },
-    { name: 'Articles', icon: <FileText size={20} />, path: '/admin/articles' },
-    { name: 'Categories', icon: <FolderTree size={20} />, path: '/admin/categories' },
+    { name: 'Overview', icon: <LayoutDashboard size={20} />, path: '/admin/' },
+    { name: 'Articles', icon: <FileText size={20} />, path: '/admin/articles/' },
+    { name: 'Categories', icon: <FolderTree size={20} />, path: '/admin/categories/' },
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 font-sans">
+    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
       {/* SIDEBAR */}
-      <aside className="w-72 bg-white border-r border-gray-100 flex flex-col p-6 fixed h-full z-50">
-        
-        {/* Brand Header */}
-        <div className="mb-10 flex items-center gap-3 px-2">
+      <aside className="w-72 bg-white border-r border-gray-100 flex flex-col h-full shadow-xl z-50">
+        <div className="p-8 flex items-center gap-3">
           <div className="w-10 h-10 bg-[#114AB1] rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
             <ShieldCheck size={24} />
           </div>
@@ -54,15 +48,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        {/* Navigation Links */}
-        <nav className="flex-grow space-y-2">
+        <nav className="flex-grow overflow-y-auto px-4 py-2 space-y-2">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 mb-4">Main Menu</p>
           {menu.map((item) => (
             <Link 
               key={item.path} 
               href={item.path}
               className={`flex items-center gap-3 p-4 rounded-2xl font-bold transition-all duration-200 ${
                 pathname === item.path 
-                ? 'bg-[#114AB1] text-white shadow-xl shadow-blue-900/20' 
+                ? 'bg-[#114AB1] text-white shadow-lg shadow-blue-900/20' 
                 : 'text-[#6793AC] hover:bg-gray-50 hover:text-[#114AB1]'
               }`}
             >
@@ -72,28 +66,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ))}
         </nav>
 
-        {/* Sidebar Footer / Logout */}
-        <div className="pt-6 border-t border-gray-100 space-y-3">
+        <div className="p-6 mt-auto border-t border-gray-100 bg-white">
           <Link 
             href="/" 
-            className="flex items-center gap-3 p-4 text-[#6793AC] font-bold hover:text-[#E4580B] hover:bg-orange-50 rounded-2xl transition-all duration-200"
+            className="flex items-center gap-3 p-4 text-[#6793AC] font-bold hover:text-[#114AB1] hover:bg-blue-50 rounded-2xl transition-all mb-2"
           >
             <ExternalLink size={20} /> 
-            <span>View Public Site</span>
+            <span className="text-sm">Public Site</span>
           </Link>
           
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 p-4 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-all duration-200 group"
+            className="w-full flex items-center gap-3 p-4 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-all group"
           >
             <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" /> 
-            <span>System Logout</span>
+            <span className="text-sm">Logout</span>
           </button>
         </div>
       </aside>
 
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-grow ml-72 p-10 min-h-screen">
+      <main className="flex-grow overflow-y-auto p-10">
         <div className="max-w-6xl mx-auto">
           {children}
         </div>

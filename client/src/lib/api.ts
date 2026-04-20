@@ -78,6 +78,7 @@ export const getCategories = async () => {
 // ─── Admin write APIs (Axios) ──────────────────────────────────────────────
 
 export const login = async (credentials: { username: string; password: string }) => {
+  // Ensure the trailing slash is here for Django
   const response = await axios.post(`${API_URL}/token/`, credentials);
   if (response.data.access && !isServer) {
     localStorage.setItem("access_token", response.data.access);
@@ -85,7 +86,6 @@ export const login = async (credentials: { username: string; password: string })
   }
   return response.data;
 };
-
 export const getAdminArticles = async () => {
   const response = await adminApi.get("/articles/");
   return response.data;
