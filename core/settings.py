@@ -43,13 +43,13 @@ else:
 
 # Application definition
 
-INSTALLED_APPS = [
+INSTALLED_APPS = ['cloudinary_storage',
+                  
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
@@ -66,8 +66,10 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET')
 }
 SITE_ID = 1
+IS_VERCEL = os.environ.get('VERCEL') == '1' or os.environ.get('VERCEL_URL') is not None
 if os.environ.get('VERCEL'):
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    FILE_UPLOAD_TEMP_DIR = '/tmp'  # Vercel's writable temp directory
 else:
     # Local development uses your hard drive
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
