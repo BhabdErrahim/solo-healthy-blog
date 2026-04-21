@@ -29,10 +29,14 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = ['.vercel.app', 'now.sh', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['SoloLife.doctoolsai.com','.vercel.app', 'now.sh', 'localhost', '127.0.0.1']
 SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://SoloLife.doctoolsai.com',
+    'https://sololife-six.vercel.app',
+]
 # core/settings.py
 if not DEBUG:
     # Production: upload to Cloudinary CDN
@@ -225,6 +229,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 CORS_ALLOWED_ORIGINS = [
+    'https://SoloLife.doctoolsai.com',
     "http://localhost:3000",
     "https://sololife-six.vercel.app",
 ]
