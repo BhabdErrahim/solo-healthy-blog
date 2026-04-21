@@ -12,9 +12,13 @@ export const metadata: Metadata = {
     default: "SoloLife OS | The Modern Solo-Living Platform",
     template: "%s | SoloLife",
   },
-  description:
-    "Master the art of solo living through healthy habits, mindful travel, and curated recipes for one.",
-};
+  description:"Master the art of solo living through healthy habits, mindful travel, and curated recipes for one.",
+  icons: {
+    icon: '/favicon.ico', // Standard
+    apple: '/apple-touch-icon.png', // For iPhone bookmarks
+  },
+
+  };
 
 export default function RootLayout({
   children,
