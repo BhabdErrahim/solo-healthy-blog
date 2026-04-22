@@ -38,15 +38,18 @@ adminApi.interceptors.request.use((config) => {
 
 export const getArticles = async () => {
   try {
-    // Added trailing slash / and cache control
     const res = await fetch(`${API_URL}/articles/`, {
-      next: { revalidate: 0 },
-      cache: 'no-store',
+      // ISR: Pre-render at build time, update every 60 seconds
+      next: { revalidate: 60 }, 
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    if (!res.ok) {
+        console.error(`API Error: ${res.status}`);
+        return [];
+    }
     return await res.json();
   } catch (err) {
-    console.error("API Error (getArticles):", err);
+    console.error("Fetch failed during build/runtime:", err);
     return [];
   }
 };

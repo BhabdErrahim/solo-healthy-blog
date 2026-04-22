@@ -14,11 +14,12 @@ export default async function Home() {
     return (
       <main className="bg-white min-h-screen">
         <HomeHero />
-        <div className="py-40 text-center">
-          <h2 className="text-2xl font-black text-brand-deep opacity-20 uppercase tracking-widest">
-            Initializing Platform Data...
-          </h2>
-          <p className="text-brand-muted mt-2">Log in to /admin to deploy your first cornerstone.</p>
+        <div className="py-40 text-center flex flex-col items-center justify-center">
+            <div className="w-16 h-16 border-4 border-brand-orange border-t-transparent rounded-full animate-spin mb-6"></div>
+            <h2 className="text-2xl font-black text-brand-deep uppercase tracking-widest opacity-30">
+                SoloLife OS Initializing...
+            </h2>
+            <p className="text-brand-muted mt-2">Deploy your first cornerstone in the dashboard to go live.</p>
         </div>
       </main>
     );
