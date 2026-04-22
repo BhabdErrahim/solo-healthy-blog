@@ -40,7 +40,8 @@ export const getArticles = async () => {
   try {
     // Added trailing slash / and cache control
     const res = await fetch(`${API_URL}/articles/`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 0 },
+      cache: 'no-store',
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
