@@ -10,6 +10,7 @@ from django.contrib.sitemaps.views import sitemap
 from blog.sitemaps import ArticleSitemap, CategorySitemap
 
 sitemaps = {
+    'static': StaticViewSitemap,
     'articles': ArticleSitemap,
     'categories': CategorySitemap,
 }

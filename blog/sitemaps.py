@@ -1,21 +1,43 @@
 from django.contrib.sitemaps import Sitemap
+from django.urls import reverse
 from .models import Article, Category
 
-class ArticleSitemap(Sitemap):
-    changefreq = "weekly"
-    priority = 0.9 # High priority for articles
+# 1. STATIC PAGES SITEMAP
+# This handles all pages that don't change based on the database
+class StaticViewSitemap(Sitemap):
+    priority = 0.8
+    changefreq = 'monthly'
 
     def items(self):
-        # Only index published articles
+        # These correspond to your Next.js routes
+        return ['home', 'about', 'privacy', 'terms']
+
+    def location(self, item):
+        mapping = {
+            'home': '/',
+            'about': '/about/',
+            'privacy': '/privacy/',
+            'terms': '/terms/',
+        }
+        return mapping.get(item)
+
+# 2. DYNAMIC ARTICLES SITEMAP
+class ArticleSitemap(Sitemap):
+    changefreq = "weekly"
+    priority = 1.0 # Highest priority for search engines
+
+    def items(self):
+        # Only index published content
         return Article.objects.filter(status='published')
 
     def lastmod(self, obj):
         return obj.updated_at
 
     def location(self, obj):
-        # CRITICAL: Point to your Next.js frontend URL, not the backend
-        return f"/article/{obj.slug}"
+        # Added trailing slash to match Next.js config
+        return f"/article/{obj.slug}/"
 
+# 3. DYNAMIC CATEGORIES SITEMAP
 class CategorySitemap(Sitemap):
     changefreq = "monthly"
     priority = 0.7
@@ -24,4 +46,5 @@ class CategorySitemap(Sitemap):
         return Category.objects.all()
 
     def location(self, obj):
-        return f"/category/{obj.slug}"
+        # Added trailing slash to match Next.js config
+        return f"/category/{obj.slug}/"
