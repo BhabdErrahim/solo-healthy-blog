@@ -7,7 +7,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from django.contrib.sitemaps.views import sitemap
-from blog.sitemaps import ArticleSitemap, CategorySitemap
+from blog.sitemaps import ArticleSitemap, CategorySitemap,StaticViewSitemap
 
 sitemaps = {
     'static': StaticViewSitemap,
