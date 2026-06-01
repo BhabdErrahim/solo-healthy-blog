@@ -13,7 +13,7 @@ import type { Metadata } from "next";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import "./globals.css";
 
-export const SITE_URL = "https://sololife-six.vercel.app";
+export const SITE_URL = `https://sololife.doctoolsai.com`;
 export const SITE_NAME = "SoloLife";
 const OG_IMAGE = `${SITE_URL}/og-default.jpg`; // 1200×630 fallback
 

@@ -54,7 +54,7 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
       {/* Content */}
       <div className="px-2 flex flex-col flex-grow">
         <div className="flex justify-between items-start mb-3">
-          <Link href={`/article/${article.slug}`}>
+          <Link href={`/article/${article.slug}/`}>
             <h3 className="text-2xl font-bold text-brand-deep leading-tight group-hover:text-brand-orange transition-colors">
               {article.title}
             </h3>
@@ -78,7 +78,7 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
         </div>
 
         <Link
-          href={`/article/${article.slug}`}
+          href={`/article/${article.slug}/`}
           className="mt-auto w-full bg-brand-orange text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-brand-deep transition-all duration-300 shadow-lg shadow-orange-200 group-hover:shadow-blue-200"
         >
           <BookOpen size={18} />

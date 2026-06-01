@@ -22,7 +22,7 @@ import { Heart, Globe, Home, Activity, Utensils } from "lucide-react";
 export const revalidate = 60;
 export const dynamicParams = true;
 
-const SITE_URL = "https://sololife-six.vercel.app";
+const SITE_URL = `https://sololife.doctoolsai.com`;
 
 // ─── Static generation: pre-build all known category slugs ───────────────────
 export async function generateStaticParams() {
@@ -156,7 +156,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const style = categoryStyles[slug] ?? buildFallbackStyle(slug);
-  const canonicalUrl = `${SITE_URL}/category/${slug}`;
+  const canonicalUrl = `${SITE_URL}/category/${slug}/`;
 
   return {
     title: style.title,
@@ -214,7 +214,7 @@ export default async function CategoryPage({
   const { slug } = await params;
   const articles = await getArticles();
   const style = categoryStyles[slug] ?? buildFallbackStyle(slug);
-  const canonicalUrl = `${SITE_URL}/category/${slug}`;
+  const canonicalUrl = `${SITE_URL}/category/${slug}/`;
 
   // Filter articles safely
   const filteredArticles = articles.filter((a: any) => {
@@ -256,7 +256,7 @@ export default async function CategoryPage({
     hasPart: filteredArticles.map((a: any) => ({
       "@type": "BlogPosting",
       headline: a.title,
-      url: `${SITE_URL}/article/${a.slug}`,
+      url: `${SITE_URL}/article/${a.slug}/`,
       image: getFullImageUrl(a.thumbnail) || undefined,
       datePublished: a.created_at,
       description: a.excerpt,
@@ -273,7 +273,7 @@ export default async function CategoryPage({
     itemListElement: filteredArticles.slice(0, 10).map((a: any, idx: number) => ({
       "@type": "ListItem",
       position: idx + 1,
-      url: `${SITE_URL}/article/${a.slug}`,
+      url: `${SITE_URL}/article/${a.slug}/`,
       name: a.title,
       image: getFullImageUrl(a.thumbnail) || undefined,
     })),

@@ -22,7 +22,7 @@ import type { Metadata } from "next";
 export const revalidate = 60;
 export const dynamicParams = true;
 
-const SITE_URL = "https://sololife-six.vercel.app";
+const SITE_URL = `https://sololife.doctoolsai.com`;
 
 export async function generateStaticParams() {
   const articles = await getArticles();
@@ -59,7 +59,7 @@ export async function generateMetadata({
     };
   }
 
-  const canonicalUrl = `${SITE_URL}/article/${slug}`;
+  const canonicalUrl = `${SITE_URL}/article/${slug}/`;
   const thumbnailUrl = getFullImageUrl(article.thumbnail) ?? "";
   const categoryName: string = article.category?.name ?? "SoloLife";
   const authorName: string = article.author?.username ?? "SoloLife";
@@ -143,7 +143,7 @@ export default async function ArticleDetail({
     );
   }
 
-  const canonicalUrl = `${SITE_URL}/article/${slug}`;
+  const canonicalUrl = `${SITE_URL}/article/${slug}/`;
   const thumbnailUrl = getFullImageUrl(article.thumbnail) ?? "";
   const categoryName: string = article.category?.name ?? "SoloLife";
   const categorySlug: string = article.category?.slug ?? "category";
