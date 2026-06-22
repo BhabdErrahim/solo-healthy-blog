@@ -36,10 +36,6 @@
       "dest": "core/wsgi.py"
     },
     {
-      "src": "/sitemap.xml",
-      "dest": "core/wsgi.py"
-    },
-    {
       "src": "/static/admin/(.*)",
       "dest": "core/wsgi.py"
     },

@@ -59,8 +59,6 @@ INSTALLED_APPS = ['cloudinary_storage',
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'django.contrib.sitemaps',
-    'django.contrib.sites',
     'cloudinary',
     'blog',
 ]
@@ -71,7 +69,6 @@ CLOUDINARY_STORAGE = {
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET')
 }
-SITE_ID = 1
 IS_VERCEL = os.environ.get('VERCEL') == '1' or os.environ.get('VERCEL_URL') is not None
 if os.environ.get('VERCEL'):
     STORAGES = {
