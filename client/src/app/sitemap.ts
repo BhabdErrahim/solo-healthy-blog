@@ -2,7 +2,7 @@
 import type { MetadataRoute } from "next";
 import { getArticles, getCategories } from "@/lib/api";
 
-const SITE_URL = "https://sololife-six.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const revalidate = 3600; // Rebuild sitemap every hour
 

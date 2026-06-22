@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'sololife-six.vercel.app' },
+      {protocol: 'https', hostname: 'sololife.doctoolsai.com'},
       { protocol: 'http', hostname: '127.0.0.1' },
     ],
   },
