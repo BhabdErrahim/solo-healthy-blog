@@ -7,13 +7,9 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from django.contrib.sitemaps.views import sitemap
-from blog.sitemaps import ArticleSitemap, CategorySitemap,StaticViewSitemap
 
-sitemaps = {
-    'static': StaticViewSitemap,
-    'articles': ArticleSitemap,
-    'categories': CategorySitemap,
-}
+
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,8 +22,6 @@ urlpatterns = [
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh_slash'),
 
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps},
-         name='django.contrib.sitemaps.views.sitemap'),
 ] 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

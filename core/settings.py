@@ -128,13 +128,23 @@ WSGI_APPLICATION = 'core.wsgi.application'
 from datetime import timedelta
 
 # 1. Add to REST_FRAMEWORK settings
+# In core/settings.py
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly', # Anyone can read, only logged in can write
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
+    # ADD THESE LINES TO PROTECT YOUR SERVER:
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',   # Anonymous users
+        'user': '1000/day'   # Authenticated users
+    }
 }
 
 # 2. JWT Settings (How long tokens last)

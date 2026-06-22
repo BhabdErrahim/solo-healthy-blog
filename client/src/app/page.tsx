@@ -142,15 +142,18 @@ export default async function Home() {
     );
   }
 
-  const recent = allArticles.slice(0, 3);
+  const heroArticles = allArticles.slice(0, 4);
+  const heroIds = heroArticles.map((a: any) => a.id);
+
+  const recent = allArticles.filter((a: any) => !heroIds.includes(a.id)).slice(0, 3);
   const recentIds = recent.map((a: any) => a.id);
 
   let popular = allArticles.filter(
-    (a: any) => a.featured && !recentIds.includes(a.id)
+    (a: any) => a.featured && !heroIds.includes(a.id) && !recentIds.includes(a.id)
   );
   if (popular.length === 0) {
     popular = allArticles
-      .filter((a: any) => !recentIds.includes(a.id))
+      .filter((a: any) => !heroIds.includes(a.id) && !recentIds.includes(a.id))
       .slice(0, 4);
   } else {
     popular = popular.slice(0, 4);
@@ -158,7 +161,7 @@ export default async function Home() {
   const popularIds = popular.map((a: any) => a.id);
 
   let mixed = allArticles.filter(
-    (a: any) => !recentIds.includes(a.id) && !popularIds.includes(a.id)
+    (a: any) => !heroIds.includes(a.id) && !recentIds.includes(a.id) && !popularIds.includes(a.id)
   );
   if (mixed.length < 5) {
     mixed = [...allArticles].sort(() => 0.5 - Math.random()).slice(0, 5);
@@ -169,7 +172,7 @@ export default async function Home() {
   // ── JSON-LD schemas ────────────────────────────────────────────────────────
   const websiteSchema = buildWebSiteSchema();
   const orgSchema = buildOrganizationSchema();
-  const itemListSchema = buildItemListSchema(recent);
+  const itemListSchema = buildItemListSchema(heroArticles); // Changed from recent to heroArticles
 
   return (
     <>
@@ -181,8 +184,8 @@ export default async function Home() {
         }}
       />
 
-      <main className="bg-white min-h-screen">
-        <HomeHero />
+      <main className="bg-[#F8F7F5] min-h-screen">
+        <HomeHero articles={heroArticles} />
 
         {/* TRANSITION NAV BAR */}
         <nav aria-label="Content categories" className="border-y border-gray-100 bg-gray-50/50 py-6">

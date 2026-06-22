@@ -20,37 +20,25 @@ const OG_IMAGE = `${SITE_URL}/og-default.jpg`; // 1200×630 fallback
 export const metadata: Metadata = {
   // ── 1. metadataBase is REQUIRED so relative URLs become absolute ──────────
   metadataBase: new URL(SITE_URL),
-
-  // ── 2. Title template so every page auto-appends brand ────────────────────
   title: {
-    default: "SoloLife | The Modern Solo-Living Platform",
+    default: "SoloLife | The Ultimate Guide to Solo Living, Travel & Wellness",
     template: "%s | SoloLife",
   },
-
-  // ── 3. Description — 150-160 chars, keyword-rich ──────────────────────────
   description:
-    "Master the art of solo living. Expert guides on healthy habits, solo travel, gourmet recipes for one, fitness, and home organisation for independent people.",
-
-  // ── 4. Canonical + alternates ─────────────────────────────────────────────
+    "Master the art of independent living with SoloLife. Discover expert advice on solo travel, cooking for one, home organization, and building healthy habits alone.",
   alternates: { canonical: SITE_URL },
-
-  // ── 5. Keywords (used by Bing; ignored by Google but harmless) ────────────
   keywords: [
     "solo living",
-    "healthy habits",
-    "solo travel",
-    "recipes for one",
-    "solo fitness",
     "independent lifestyle",
     "living alone tips",
+    "cooking for one",
+    "solo travel destinations",
+    "healthy habits for singles",
+    "solo wellness",
   ],
-
-  // ── 6. Authorship ─────────────────────────────────────────────────────────
   authors: [{ name: "SoloLife Editorial", url: SITE_URL }],
   creator: "SoloLife",
   publisher: "SoloLife",
-
-  // ── 7. Robots — tell Google to index everything and show rich snippets ────
   robots: {
     index: true,
     follow: true,
@@ -62,38 +50,25 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-
-  // ── 8. Open Graph defaults ────────────────────────────────────────────────
   openGraph: {
     type: "website",
     locale: "en_US",
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: "SoloLife | The Modern Solo-Living Platform",
+    title: "SoloLife | The Ultimate Guide to Solo Living",
     description:
-      "Master the art of solo living. Expert guides on healthy habits, solo travel, gourmet recipes, and fitness for independent people.",
-    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: "SoloLife Platform" }],
+      "Master the art of independent living. Expert advice on solo travel, cooking for one, and building healthy habits.",
+    images: [
+      { url: OG_IMAGE, width: 1200, height: 630, alt: "SoloLife Platform" },
+    ],
   },
-
-  // ── 9. Twitter Card defaults ──────────────────────────────────────────────
   twitter: {
     card: "summary_large_image",
     site: "@SoloLifeOS",
-    creator: "@SoloLifeOS",
-    title: "SoloLife | The Modern Solo-Living Platform",
+    title: "SoloLife | The Ultimate Guide to Solo Living",
     description:
-      "Master the art of solo living. Expert guides on healthy habits, solo travel, gourmet recipes, and fitness.",
+      "Master the art of independent living. Expert advice on solo travel, cooking for one, and building healthy habits.",
     images: [OG_IMAGE],
-  },
-
-  // ── 10. Icons ─────────────────────────────────────────────────────────────
-  icons: {
-    icon: [
-      { url: "/favicon.ico" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-    ],
-    apple: "/apple-touch-icon.png",
   },
 
   // ── 11. PWA manifest ──────────────────────────────────────────────────────
@@ -106,7 +81,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <head>

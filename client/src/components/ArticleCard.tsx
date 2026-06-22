@@ -9,6 +9,7 @@ import React from "react";
 import Link from "next/link";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { getFullImageUrl } from "@/lib/utils";
+import Image from "next/image";
 
 interface ArticleCardProps {
   article: {
@@ -38,13 +39,14 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
 
         {/* ✅ FIX: Only render img when we have a valid URL */}
         {thumbnailUrl ? (
-          <img
+          <Image
             src={thumbnailUrl}
             alt={article.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover group-hover:scale-110 transition-transform duration-700"
           />
         ) : (
-          // Graceful placeholder when no thumbnail
           <div className="w-full h-full flex items-center justify-center text-gray-300">
             <BookOpen size={48} />
           </div>

@@ -13,7 +13,7 @@
 from rest_framework import generics, permissions
 from .models import Article, Category
 from .serializers import ArticleSerializer, CategorySerializer
-
+from rest_framework import filters
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -25,14 +25,18 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 class ArticleListCreateView(generics.ListCreateAPIView):
     serializer_class = ArticleSerializer
     permission_classes = [IsAdminOrReadOnly]
-
+    filter_backends = [filters.SearchFilter]
+    permission_classes = [IsAdminOrReadOnly]
     def get_queryset(self):
         # ✅ Staff/admin see ALL articles (including drafts) so the admin panel
         # still lists and edits unpublished work.
         # Public (unauthenticated or non-staff) only sees published articles.
+        qs = Article.objects.select_related('category',
+                                            'author').prefetch_related('related_articles')
         if self.request.user and self.request.user.is_staff:
-            return Article.objects.all()
-        return Article.objects.filter(status="published")
+            return qs.all()
+        
+        return qs.filter(status="published")
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -45,9 +49,11 @@ class ArticleDetailUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         # Same logic: public can only fetch published articles.
+        qs = Article.objects.select_related('category',
+                                            'author').prefetch_related('related_articles')
         if self.request.user and self.request.user.is_staff:
-            return Article.objects.all()
-        return Article.objects.filter(status="published")
+            return qs.all9
+        return qs.filter(status = "published")
 
 # blog/views.py
 
@@ -66,3 +72,5 @@ class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAdminOrReadOnly]
+    
+    
