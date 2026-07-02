@@ -52,7 +52,7 @@ class ArticleDetailUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         qs = Article.objects.select_related('category',
                                             'author').prefetch_related('related_articles')
         if self.request.user and self.request.user.is_staff:
-            return qs.all9
+            return qs.all()
         return qs.filter(status = "published")
 
 # blog/views.py
