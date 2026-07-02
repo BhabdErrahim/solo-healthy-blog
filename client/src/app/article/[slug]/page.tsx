@@ -22,7 +22,7 @@ import type { Metadata } from "next";
 export const revalidate = 60;
 export const dynamicParams = true;
 
-const SITE_URL = `https://sololife.doctoolsai.com`;
+const SITE_URL = `https://www.sololife.xyz`;
 
 export async function generateStaticParams() {
   const articles = await getArticles();

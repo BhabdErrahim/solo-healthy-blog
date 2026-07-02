@@ -8,8 +8,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
-      { protocol: 'https', hostname: 'sololife-six.vercel.app' },
-      {protocol: 'https', hostname: 'sololife.doctoolsai.com'},
+      { protocol: 'https', hostname: 'www.sololife.xyz' },
+      {protocol: 'https', hostname: 'www.sololife.xyz'},
       { protocol: 'http', hostname: '127.0.0.1' },
     ],
   },

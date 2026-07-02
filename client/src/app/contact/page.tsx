@@ -49,7 +49,7 @@ const ContactPage = () => {
                     </div>
                     <div>
                       <p className="font-bold text-[#114AB1]">General Inquiries</p>
-                      <p className="text-sm text-gray-500">hello@sololife.doctoolsai.com</p>
+                      <p className="text-sm text-gray-500">abderrahimbachaab@gmail.com</p>
                     </div>
                   </div>
 
@@ -59,7 +59,7 @@ const ContactPage = () => {
                     </div>
                     <div>
                       <p className="font-bold text-[#114AB1]">Partnerships & Media</p>
-                      <p className="text-sm text-gray-500">partners@sololife.doctoolsai.com</p>
+                      <p className="text-sm text-gray-500">abderrahimbachaab@gmail.com</p>
                     </div>
                   </div>
 

@@ -21,7 +21,7 @@ import Link from "next/link";
 // ── ISR: rebuild this page every 60 s in the background ──────────────────────
 export const revalidate = 60;
 
-const SITE_URL = `https://sololife.doctoolsai.com`;
+const SITE_URL = `https://www.sololife.xyz`;
 
 // ── Page-level metadata (merges with / overrides layout.tsx defaults) ─────────
 export const metadata: Metadata = {
