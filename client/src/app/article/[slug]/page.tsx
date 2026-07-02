@@ -17,12 +17,11 @@ import { Clock, User, Calendar, Share2, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { getFullImageUrl } from "@/lib/utils";
 import type { Metadata } from "next";
-
+import { SITE_URL } from "@/lib/config";
 // ─── Static generation ────────────────────────────────────────────────────────
 export const revalidate = 60;
 export const dynamicParams = true;
 
-const SITE_URL = `https://www.sololife.xyz`;
 
 export async function generateStaticParams() {
   const articles = await getArticles();

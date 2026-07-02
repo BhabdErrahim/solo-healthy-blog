@@ -13,7 +13,7 @@ import type { Metadata } from "next";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import "./globals.css";
 
-export const SITE_URL = 'https://www.sololife.xyz';
+import { SITE_URL } from "@/lib/config";
 export const SITE_NAME = "SoloLife";
 const OG_IMAGE = `${SITE_URL}/og-default.jpg`; // 1200×630 fallback
 

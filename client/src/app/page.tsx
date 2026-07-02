@@ -17,11 +17,10 @@ import { getArticles } from "@/lib/api";
 import { getFullImageUrl } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-
+import { SITE_URL } from "@/lib/config";
 // ── ISR: rebuild this page every 60 s in the background ──────────────────────
 export const revalidate = 60;
 
-const SITE_URL = `https://www.sololife.xyz`;
 
 // ── Page-level metadata (merges with / overrides layout.tsx defaults) ─────────
 export const metadata: Metadata = {

@@ -28,14 +28,16 @@ load_dotenv(dotenv_path=env_path)
 SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == 'True'
+FRONTEND_URL = os.environ.get('NEXT_PUBLIC_SITE_URL', 'https://www.sololife.xyz')
+SITE_DOMAIN = os.environ.get('SITE_DOMAIN', 'sololife.xyz')
 
-ALLOWED_HOSTS = ['SoloLife.xyz', 'www.sololife.xyz','.vercel.app', 'now.sh', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = [SITE_DOMAIN, f'www.{SITE_DOMAIN}','.vercel.app', 'now.sh', 'localhost', '127.0.0.1']
 SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
-    'https://SoloLife.xyz',
-    'https://www.SoloLife.xyz',
+     FRONTEND_URL,
+    f'https://{SITE_DOMAIN}',
     'https://sololife-six.vercel.app',
 ]
 USE_X_FORWARDED_HOST = True
@@ -239,8 +241,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 CORS_ALLOWED_ORIGINS = [
-    'https://www.sololife.xyz',
-    'https://sololife.xyz',
+    FRONTEND_URL,
+    f'https://{SITE_DOMAIN}',
     "http://localhost:3000",
     "https://sololife-six.vercel.app",
 ]

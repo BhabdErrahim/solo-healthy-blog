@@ -2,7 +2,7 @@
 import type { MetadataRoute } from "next";
 import { getArticles, getCategories } from "@/lib/api";
 
-const SITE_URL = 'https://www.sololife.xyz';
+import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 3600; // Rebuild sitemap every hour
 
