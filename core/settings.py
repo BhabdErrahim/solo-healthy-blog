@@ -240,8 +240,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 CORS_ALLOWED_ORIGINS = [
     'https://www.sololife.xyz',
-    'www.sololife.xyz',
-    'sololife.xyz',
+    'https://sololife.xyz',
     "http://localhost:3000",
     "https://sololife-six.vercel.app",
 ]
