@@ -20,7 +20,7 @@ export default function DiscoveryGrid({ articles }: { articles: any[] }) {
           
           {/* FIX: Only render the img if the URL is not null/empty */}
           {mainImageUrl ? (
-            <img src={mainImageUrl} className="w-full h-full object-cover" alt="" />
+            <img src={mainImageUrl} className="w-full h-full object-cover" alt={mainArticle?.title} />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">
               No Image Available

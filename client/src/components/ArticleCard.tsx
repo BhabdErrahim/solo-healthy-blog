@@ -15,7 +15,8 @@ interface ArticleCardProps {
   article: {
     title: string;
     slug: string;
-    category: { name: string };
+    category?: { name: string };
+    category_details?: { name: string };
     thumbnail: string;
     excerpt: string;
     created_at: string;
@@ -33,7 +34,7 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
         {/* Category Tab */}
         <div className="absolute top-0 left-0 bg-white px-6 py-2 rounded-br-[1.5rem] z-10 shadow-sm">
           <span className="text-xs font-bold text-brand-muted uppercase tracking-widest">
-            {article.category.name}
+            {article.category_details?.name|| article.category?.name || "Article"}
           </span>
         </div>
 
