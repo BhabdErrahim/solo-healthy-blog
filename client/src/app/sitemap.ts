@@ -2,7 +2,8 @@
 import type { MetadataRoute } from "next";
 import { getArticles, getCategories } from "@/lib/api";
 
-import { SITE_URL } from "@/lib/config";
+
+export const SITE_URL = `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}`;
 
 export const revalidate = 3600; // Rebuild sitemap every hour
 
