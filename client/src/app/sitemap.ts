@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 import { getArticles, getCategories } from "@/lib/api";
 
 
-export const SITE_URL = `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}`;
+export const SITE_URL = `https://www.sololife.xyz`;
 
 export const revalidate = 3600; // Rebuild sitemap every hour
 
