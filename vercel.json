@@ -2,10 +2,6 @@
   "version": 2,
   "builds": [
     {
-      "src": "/robots.txt",
-      "dest": "/client/robots.txt"
-    },
-    {
       "src": "core/wsgi.py",
       "use": "@vercel/python"
     },
@@ -15,22 +11,6 @@
     }
   ],
   "routes": [
-    {
-      "src": "/api/token",
-      "dest": "core/wsgi.py"
-    },
-    {
-      "src": "/api/token/",
-      "dest": "core/wsgi.py"
-    },
-    {
-      "src": "/api/token/refresh",
-      "dest": "core/wsgi.py"
-    },
-    {
-      "src": "/api/token/refresh/",
-      "dest": "core/wsgi.py"
-    },
     {
       "src": "/api/(.*)",
       "dest": "core/wsgi.py"
@@ -42,6 +22,18 @@
     {
       "src": "/static/admin/(.*)",
       "dest": "core/wsgi.py"
+    },
+    {
+      "src": "/media/(.*)",
+      "dest": "core/wsgi.py"
+    },
+    {
+      "src": "/sitemap.xml",
+      "dest": "client/sitemap.xml"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "client/robots.txt"
     },
     {
       "src": "/(.*)",
