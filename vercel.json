@@ -11,8 +11,7 @@
     { "src": "/media/(.*)", "dest": "core/wsgi.py" },
 
     
-    { "src": "/sitemap.xml", "dest": "/client/sitemap.xml" },
-    { "src": "/robots.txt", "dest": "/client/robots.txt" },
+  
 
     { "src": "/(.*)", "dest": "client/$1" }
   ]
