@@ -1,43 +1,19 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "core/wsgi.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "client/package.json",
-      "use": "@vercel/next"
-    }
+    { "src": "core/wsgi.py", "use": "@vercel/python" },
+    { "src": "client/package.json", "use": "@vercel/next" }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "core/wsgi.py"
-    },
-    {
-      "src": "/sys-admin/(.*)",
-      "dest": "core/wsgi.py"
-    },
-    {
-      "src": "/static/admin/(.*)",
-      "dest": "core/wsgi.py"
-    },
-    {
-      "src": "/media/(.*)",
-      "dest": "core/wsgi.py"
-    },
-    {
-      "src": "/sitemap.xml",
-      "dest": "client/sitemap.xml"
-    },
-    {
-      "src": "/robots.txt",
-      "dest": "client/robots.txt"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "client/$1"
-    }
+    { "src": "/api/(.*)", "dest": "core/wsgi.py" },
+    { "src": "/sys-admin/(.*)", "dest": "core/wsgi.py" },
+    { "src": "/static/admin/(.*)", "dest": "core/wsgi.py" },
+    { "src": "/media/(.*)", "dest": "core/wsgi.py" },
+
+    
+    { "src": "/sitemap.xml", "dest": "/client/sitemap.xml" },
+    { "src": "/robots.txt", "dest": "/client/robots.txt" },
+
+    { "src": "/(.*)", "dest": "client/$1" }
   ]
 }
