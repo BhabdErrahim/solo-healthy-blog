@@ -8,7 +8,7 @@
 //  ⑤ manifest + theme-color for PWA/mobile
 //  ⑥ Verification placeholders (Google / Bing)
 // ─────────────────────────────────────────────────────────────────────────────
-
+import { GoogleAnalytics } from '@next/third-parties/google';
 import type { Metadata } from "next";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import "./globals.css";
@@ -98,6 +98,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#114AB1" />
       </head>
       <body className="flex flex-col min-h-screen">
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
